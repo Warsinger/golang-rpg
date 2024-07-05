@@ -1,7 +1,7 @@
 - entity:
     object:
-      xpos: 100
-      ypos: 100
+      xpos: 120
+      ypos: 90
       size: 32
     name: Gorgon
     defense: 2
@@ -13,7 +13,20 @@
     attackpower: 4
 - entity:
     object:
-      xpos: 150
+      xpos: 600
+      ypos: 500
+      size: 32
+    name: Gorgon Lord
+    defense: 3
+    maxhealth: 100
+    currenthealth: 100
+    gold: 32
+    experiencevalue: 32
+  attacker:
+    attackpower: 5
+- entity:
+    object:
+      xpos: 450
       ypos: 150
       size: 16
     name: Barbol
@@ -29,7 +42,7 @@
       xpos: 200
       ypos: 200
       size: 16
-    name: Barbol1
+    name: Barbol Prime
     defense: 3
     maxhealth: 40
     currenthealth: 40
@@ -39,10 +52,10 @@
     attackpower: 2
 - entity:
     object:
-      xpos: 250
-      ypos: 250
+      xpos: 150
+      ypos: 209
       size: 16
-    name: Barbol2
+    name: Barbol Ardent
     defense: 3
     maxhealth: 40
     currenthealth: 40
@@ -52,10 +65,10 @@
     attackpower: 2
 - entity:
     object:
-      xpos: 300
-      ypos: 300
+      xpos: 200
+      ypos: 500
       size: 16
-    name: Barbol3
+    name: Barbol Matriarch
     defense: 3
     maxhealth: 40
     currenthealth: 40
