@@ -34,3 +34,7 @@ func (e *Monster) TextOffset() (float32, float32) {
 	y := e.y - e.size/2
 	return x, y
 }
+
+func (m *Monster) Loot() Usable {
+	return &Treasure{Item: Item{value: m.gold, Object: Object{m.x + m.size/2, m.y + m.size/2, 15}}}
+}

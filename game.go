@@ -42,10 +42,12 @@ func (g *Game) Update() error {
 		if ebiten.IsKeyPressed(ebiten.KeyA) {
 			for _, m := range g.monsters {
 				if m.Alive() && inRange(&g.player.Object, &m.Object) {
-					attack(g.player, m)
+					g.player.AttackMonster(m)
 					if !m.Alive() {
-						// drop some treasure
-						g.items = append(g.items, &Treasure{Item: Item{value: m.gold, Object: Object{m.x + m.size/2, m.y + m.size/2, 15}}})
+						// if moster dies, drop some treasure
+						g.items = append(g.items, m.Loot())
+						// get some experience
+						g.player.AddExperience(m.experienceValue)
 					}
 				}
 			}
@@ -72,6 +74,7 @@ func (g *Game) Init() {
 		m.x = float32(50 * (i + 2))
 		m.y = float32(50 * (i + 2))
 		m.gold = int(m.size)
+		m.experienceValue = int(m.size)
 	}
 	for _, item := range g.items {
 		item.Refresh()

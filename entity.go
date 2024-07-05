@@ -18,11 +18,12 @@ type Object struct {
 
 type Entity struct {
 	Object
-	name          string
-	defense       int
-	maxHealth     int
-	currentHealth int
-	gold          int
+	name            string
+	defense         int
+	maxHealth       int
+	currentHealth   int
+	gold            int
+	experienceValue int
 }
 type Attacker struct {
 	attack int
@@ -59,14 +60,6 @@ func distance(o1, o2 *Object) float64 {
 func inRange(o1, o2 *Object) bool {
 	// if the distance 2 objects is < the sum of their sizes they can interact
 	return distance(o1, o2) < float64(o1.size+o2.size)
-}
-
-func attack(p *Player, m *Monster) {
-	p.Attack(&m.Entity)
-	if m.Alive() {
-		// if monster is still alive calculate the monster's attack value and subtract from player's health
-		m.Attack(&p.Entity)
-	}
 }
 
 func (a *Attacker) Attack(d *Entity) {
