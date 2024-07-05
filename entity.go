@@ -59,13 +59,15 @@ func inRange(o1, o2 *Object) bool {
 }
 
 func attack(p *Player, m *Monster) {
-	// calculate the player's attack value and subtract from monster's health
-	pAttack := int(math.Max(float64(rand.IntN(p.attack+1)-m.defense), 0))
-	m.currentHealth = int(math.Max(float64(m.currentHealth-pAttack), 0))
-
+	p.Attack(&m.Entity)
 	if m.Alive() {
 		// if monster is still alive calculate the monster's attack value and subtract from player's health
-		mAttack := int(math.Max(float64(rand.IntN(m.attack+1)-p.defense), 0))
-		p.currentHealth = int(math.Max(float64(p.currentHealth-mAttack), 0))
+		m.Attack(&p.Entity)
 	}
+}
+
+func (a *Attacker) Attack(d *Entity) {
+	// calculate the attackers's attack value and subtract from defender's health
+	pAttack := int(math.Max(float64(rand.IntN(a.attack+1)-d.defense), 0))
+	d.currentHealth = int(math.Max(float64(d.currentHealth-pAttack), 0))
 }
