@@ -1,4 +1,4 @@
-module game
+module golang-rpg
 
 go 1.22.5
 

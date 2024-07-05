@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -23,6 +24,12 @@ func main() {
 		},
 	}
 	game.Init()
+
+	fmt.Println("Arrow Keys to move")
+	fmt.Println("A key to attack monster when in range")
+	fmt.Println("U key to pick up loot when in range")
+	fmt.Println("R key to reset the game")
+	fmt.Println("Q key to quit the game")
 
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Basic RPG")
