@@ -5,3 +5,10 @@
       size: 15
     value: 100
     used: false
+- item:
+    object:
+      xpos: 451
+      ypos: 532
+      size: 15
+    value: 1000
+    used: false

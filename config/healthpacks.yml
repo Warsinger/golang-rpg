@@ -12,3 +12,17 @@
       size: 15
     value: 50
     used: false
+- item:
+    object:
+      xpos: 614
+      ypos: 440
+      size: 15
+    value: 75
+    used: false
+- item:
+    object:
+      xpos: 300
+      ypos: 330
+      size: 15
+    value: 60
+    used: false
