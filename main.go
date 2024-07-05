@@ -6,6 +6,7 @@ import (
 	"image/color"
 	"log"
 	"math"
+	"math/rand/v2"
 
 	"github.com/hajimehoshi/ebiten/examples/resources/fonts"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -19,8 +20,8 @@ const (
 )
 
 type Game struct {
-	monster Monster
-	player  Player
+	player   *Player
+	monsters []*Monster
 }
 
 type Object struct {
@@ -28,9 +29,10 @@ type Object struct {
 }
 type Entity struct {
 	Object
-	name    string
-	defense int
-	health  int
+	name          string
+	defense       int
+	maxHealth     int
+	currentHealth int
 }
 type Attacker struct {
 	attack int
@@ -47,7 +49,7 @@ type Monster struct {
 var (
 	mplusFaceSource *text.GoTextFaceSource
 	mplusNormalFace *text.GoTextFace
-	mplusBigFace    *text.GoTextFace
+	// mplusBigFace    *text.GoTextFace
 )
 
 func init() {
@@ -61,20 +63,23 @@ func init() {
 		Source: mplusFaceSource,
 		Size:   8,
 	}
-	mplusBigFace = &text.GoTextFace{
-		Source: mplusFaceSource,
-		Size:   24,
-	}
+	// mplusBigFace = &text.GoTextFace{
+	// 	Source: mplusFaceSource,
+	// 	Size:   24,
+	// }
 }
 func (e *Entity) Alive() bool {
-	return e.health > 0
+	return e.currentHealth > 0
+}
+func (e *Entity) Heal() {
+	e.currentHealth = e.maxHealth
 }
 
 func (e *Entity) DrawInfo(screen *ebiten.Image, textOffset func() (float32, float32)) {
 	// Draw health inside the character
 	var infoText string
-	if e.health > 0 {
-		infoText = fmt.Sprintf("%s\n   %d", e.name, e.health)
+	if e.currentHealth > 0 {
+		infoText = fmt.Sprintf("%s\n%d/%d", e.name, e.currentHealth, e.maxHealth)
 	} else {
 		infoText = fmt.Sprintf("Dead\n%s", e.name)
 	}
@@ -87,15 +92,22 @@ func (e *Entity) DrawInfo(screen *ebiten.Image, textOffset func() (float32, floa
 
 func (m *Monster) Draw(screen *ebiten.Image) {
 	if m.Alive() {
-		vector.DrawFilledRect(screen, m.x, m.y, m.size, m.size, color.RGBA{255, 0, 0, 255}, true)
+		offset := m.size / 2
+		vector.DrawFilledRect(screen, m.x-offset, m.y-offset, m.size, m.size, color.RGBA{255, 0, 0, 255}, true)
+
 	}
 	m.DrawInfo(screen, m.TextOffset)
 
 }
 
-func (e *Entity) TextOffset() (float32, float32) {
-	x := e.x - e.size/4
-	y := e.y + e.size/4
+func (m *Monster) Select(screen *ebiten.Image) {
+	offset := m.size / 2
+	vector.StrokeRect(screen, m.x-offset, m.y-offset, m.size, m.size, 2, color.RGBA{0, 255, 255, 255}, true)
+}
+
+func (e *Monster) TextOffset() (float32, float32) {
+	x := e.x - e.size/2
+	y := e.y - e.size/2
 	return x, y
 }
 func (p *Player) TextOffset() (float32, float32) {
@@ -115,6 +127,9 @@ func (p *Player) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Update() error {
+	if ebiten.IsKeyPressed(ebiten.KeyR) {
+		g.Init()
+	}
 	if g.player.Alive() {
 		// Handle input
 		if ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
@@ -130,23 +145,42 @@ func (g *Game) Update() error {
 			g.player.y -= 2
 		}
 
-		if inRange(&g.player, &g.monster) {
-			attack(&g.player, &g.monster)
-			// if g.player.Alive() {
-			// 	bounce(g.player)
-			// }
+		if ebiten.IsKeyPressed(ebiten.KeyA) {
+			for _, m := range g.monsters {
+				if inRange(g.player, m) {
+					attack(g.player, m)
+				}
+			}
 		}
 	}
 
 	return nil
 }
 
-func attack(p *Player, m *Monster) {
-	m.health = m.health - (p.attack - m.defense)
-	p.health = p.health - (m.attack - p.defense)
+func (g *Game) Init() {
+	g.player.Heal()
+	g.player.x = 50
+	g.player.y = 50
+	for i, m := range g.monsters {
+		m.Heal()
+		m.x = float32(50 * (i + 2))
+		m.y = float32(50 * (i + 2))
+	}
 }
 
-func distance(o1, o2 Object) float64 {
+func attack(p *Player, m *Monster) {
+	// calculate the player's attack value and subtract from monster's health
+	pAttack := int(math.Max(float64(rand.IntN(p.attack+1)-m.defense), 0))
+	m.currentHealth = int(math.Max(float64(m.currentHealth-pAttack), 0))
+
+	if m.Alive() {
+		// if monster is still alive calculate the monster's attack value and subtract from player's health
+		mAttack := int(math.Max(float64(rand.IntN(m.attack+1)-p.defense), 0))
+		p.currentHealth = int(math.Max(float64(p.currentHealth-mAttack), 0))
+	}
+}
+
+func distance(o1, o2 *Object) float64 {
 	x := float64(o1.x - o2.x)
 	y := float64(o1.y - o2.y)
 	return math.Sqrt(x*x + y*y)
@@ -154,13 +188,18 @@ func distance(o1, o2 Object) float64 {
 
 func inRange(p *Player, m *Monster) bool {
 	// if the distance between player and monster is < the sum of their sizes they can interact
-	return m.Alive() && p.Alive() && distance(p.Object, m.Object) < float64(p.size+m.size)
+	return m.Alive() && p.Alive() && distance(&p.Object, &m.Object) < float64(p.size+m.size)
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0, 0, 0, 255}) // Clear screen
-	g.monster.Draw(screen)
 	g.player.Draw(screen)
+	for _, m := range g.monsters {
+		m.Draw(screen)
+		if inRange(g.player, m) {
+			m.Select(screen)
+		}
+	}
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -169,9 +208,16 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 
 func main() {
 	game := &Game{
-		monster: Monster{Entity: Entity{name: "Gorgon", Object: Object{x: 300, y: 200, size: 32}, defense: 2, health: 5}, Attacker: Attacker{attack: 4}},
-		player:  Player{Entity: Entity{name: "Warsinger", Object: Object{x: 20, y: 50, size: 16}, defense: 1, health: 10}, Attacker: Attacker{attack: 3}},
+		player: &Player{Entity: Entity{name: "Warsinger", Object: Object{size: 16}, defense: 1, maxHealth: 100}, Attacker: Attacker{attack: 6}},
+		monsters: []*Monster{
+			{Entity: Entity{name: "Gorgon", Object: Object{size: 32}, defense: 2, maxHealth: 75}, Attacker: Attacker{attack: 4}},
+			{Entity: Entity{name: "Barbol", Object: Object{size: 16}, defense: 3, maxHealth: 40}, Attacker: Attacker{attack: 2}},
+			{Entity: Entity{name: "Barbol1", Object: Object{size: 16}, defense: 3, maxHealth: 40}, Attacker: Attacker{attack: 2}},
+			{Entity: Entity{name: "Barbol2", Object: Object{size: 16}, defense: 3, maxHealth: 40}, Attacker: Attacker{attack: 2}},
+			{Entity: Entity{name: "Barbol3", Object: Object{size: 16}, defense: 3, maxHealth: 40}, Attacker: Attacker{attack: 2}},
+		},
 	}
+	game.Init()
 
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowTitle("Basic RPG")
