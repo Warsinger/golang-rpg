@@ -12,8 +12,8 @@ import (
 type Player struct {
 	Entity
 	Attacker
-	Experience int `yaml:"experience"`
-	Level      int `yaml:"level"`
+	Experience int
+	Level      int
 }
 
 func (p *Player) TextOffset() (float32, float32) {
