@@ -1,0 +1,14 @@
+- item:
+    object:
+      xpos: 127
+      ypos: 65
+      size: 15
+    value: 50
+    used: false
+- item:
+    object:
+      xpos: 324
+      ypos: 44
+      size: 15
+    value: 50
+    used: false

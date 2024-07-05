@@ -2,8 +2,10 @@ package main
 
 import (
 	"image/color"
+	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -12,9 +14,9 @@ const (
 )
 
 type Game struct {
-	player   *Player
-	monsters []*Monster
-	items    []Usable
+	Player   *Player
+	Monsters []*Monster
+	Items    []Usable
 }
 
 func (g *Game) Update() error {
@@ -22,40 +24,41 @@ func (g *Game) Update() error {
 		g.Init()
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyQ) {
+		g.Save()
 		return ebiten.Termination
 	}
-	if g.player.Alive() {
+	if g.Player.Alive() {
 		// Handle input
 		if ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
-			g.player.x += 2
+			g.Player.X += 2
 		}
 		if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
-			g.player.x -= 2
+			g.Player.X -= 2
 		}
 		if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
-			g.player.y += 2
+			g.Player.Y += 2
 		}
 		if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
-			g.player.y -= 2
+			g.Player.Y -= 2
 		}
 
 		if ebiten.IsKeyPressed(ebiten.KeyA) {
-			for _, m := range g.monsters {
-				if m.Alive() && inRange(&g.player.Object, &m.Object) {
-					g.player.AttackMonster(m)
+			for _, m := range g.Monsters {
+				if m.Alive() && inRange(&g.Player.Object, &m.Object) {
+					g.Player.AttackMonster(m)
 					if !m.Alive() {
 						// if moster dies, drop some treasure
-						g.items = append(g.items, m.Loot())
+						g.Items = append(g.Items, m.Loot())
 						// get some experience
-						g.player.AddExperience(m.experienceValue)
+						g.Player.AddExperience(m.ExperienceValue)
 					}
 				}
 			}
 		}
 		if ebiten.IsKeyPressed(ebiten.KeyU) {
-			for _, i := range g.items {
-				if i.inRange(&g.player.Entity) {
-					i.Use(&g.player.Entity)
+			for _, i := range g.Items {
+				if i.inRange(&g.Player.Entity) {
+					i.Use(&g.Player.Entity)
 				}
 			}
 		}
@@ -65,34 +68,29 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Init() {
-	g.player.Heal()
-	g.player.x = 50
-	g.player.y = 50
-	g.player.gold = 10
-	for i, m := range g.monsters {
-		m.Heal()
-		m.x = float32(50 * (i + 2))
-		m.y = float32(50 * (i + 2))
-		m.gold = int(m.size)
-		m.experienceValue = int(m.size)
-	}
-	for _, item := range g.items {
-		item.Refresh()
+	g.Player.Heal()
+	g.Player.X = 50
+	g.Player.Y = 50
+	g.Player.Gold = 10
+
+	err := g.Load()
+	if err != nil {
+		panic(err)
 	}
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0, 0, 0, 255}) // Clear screen
-	g.player.Draw(screen)
-	for _, m := range g.monsters {
+	g.Player.Draw(screen)
+	for _, m := range g.Monsters {
 		m.Draw(screen)
-		if inRange(&g.player.Object, &m.Object) {
+		if inRange(&g.Player.Object, &m.Object) {
 			m.Select(screen)
 		}
 	}
-	for _, i := range g.items {
+	for _, i := range g.Items {
 		i.Draw(screen)
-		if i.inRange(&g.player.Entity) {
+		if i.inRange(&g.Player.Entity) {
 			i.Select(screen)
 		}
 	}
@@ -100,4 +98,63 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return screenWidth, screenHeight
+}
+
+func (g *Game) Save() error {
+	data, err := yaml.Marshal(g)
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile("game_state.yml", data, 0644)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (g *Game) Load() error {
+	g.Items = nil
+	g.Monsters = nil
+
+	yamlFile, err := os.ReadFile("config/treasures.yml")
+	if err != nil {
+		return err
+	}
+	var treasures []Treasure
+	err = yaml.Unmarshal(yamlFile, &treasures)
+	if err != nil {
+		return err
+	}
+
+	for _, t := range treasures {
+		g.Items = append(g.Items, &t)
+	}
+
+	yamlFile, err = os.ReadFile("config/healthpacks.yml")
+	if err != nil {
+		return err
+	}
+	var healthPacks []HealthPack
+	err = yaml.Unmarshal(yamlFile, &healthPacks)
+	if err != nil {
+		return err
+	}
+
+	for _, h := range healthPacks {
+		g.Items = append(g.Items, &h)
+	}
+
+	yamlFile, err = os.ReadFile("config/monsters.yml")
+	if err != nil {
+		return err
+	}
+	var monsters []*Monster
+	err = yaml.Unmarshal(yamlFile, &monsters)
+	if err != nil {
+		return err
+	}
+
+	g.Monsters = append(g.Monsters, monsters...)
+
+	return nil
 }

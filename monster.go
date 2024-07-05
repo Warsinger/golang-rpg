@@ -14,9 +14,8 @@ type Monster struct {
 
 func (m *Monster) Draw(screen *ebiten.Image) {
 	if m.Alive() {
-		offset := m.size / 2
-		vector.DrawFilledRect(screen, m.x-offset, m.y-offset, m.size, m.size, color.RGBA{255, 0, 0, 255}, true)
-
+		offset := m.Size / 2
+		vector.DrawFilledRect(screen, m.X-offset, m.Y-offset, m.Size, m.Size, color.RGBA{255, 0, 0, 255}, true)
 	}
 	m.DrawInfo(screen, m.TextOffset)
 
@@ -24,17 +23,17 @@ func (m *Monster) Draw(screen *ebiten.Image) {
 
 func (m *Monster) Select(screen *ebiten.Image) {
 	if m.Alive() {
-		offset := m.size / 2
-		vector.StrokeRect(screen, m.x-offset, m.y-offset, m.size, m.size, 2, color.RGBA{0, 255, 255, 255}, true)
+		offset := m.Size / 2
+		vector.StrokeRect(screen, m.X-offset, m.Y-offset, m.Size, m.Size, 2, color.RGBA{0, 255, 255, 255}, true)
 	}
 }
 
 func (e *Monster) TextOffset() (float32, float32) {
-	x := e.x - e.size/2
-	y := e.y - e.size/2
+	x := e.X - e.Size/2
+	y := e.Y - e.Size/2
 	return x, y
 }
 
 func (m *Monster) Loot() Usable {
-	return &Treasure{Item: Item{value: m.gold, Object: Object{m.x + m.size/2, m.y + m.size/2, 15}}}
+	return &Treasure{Item: Item{Value: m.Gold, Object: Object{m.X + m.Size/2, m.Y + m.Size/2, 15}}}
 }

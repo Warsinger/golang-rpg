@@ -1,0 +1,65 @@
+- entity:
+    object:
+      xpos: 100
+      ypos: 100
+      size: 32
+    name: Gorgon
+    defense: 2
+    maxhealth: 75
+    currenthealth: 75
+    gold: 32
+    experiencevalue: 32
+  attacker:
+    attackpower: 4
+- entity:
+    object:
+      xpos: 150
+      ypos: 150
+      size: 16
+    name: Barbol
+    defense: 3
+    maxhealth: 40
+    currenthealth: 40
+    gold: 16
+    experiencevalue: 16
+  attacker:
+    attackpower: 2
+- entity:
+    object:
+      xpos: 200
+      ypos: 200
+      size: 16
+    name: Barbol1
+    defense: 3
+    maxhealth: 40
+    currenthealth: 40
+    gold: 16
+    experiencevalue: 16
+  attacker:
+    attackpower: 2
+- entity:
+    object:
+      xpos: 250
+      ypos: 250
+      size: 16
+    name: Barbol2
+    defense: 3
+    maxhealth: 40
+    currenthealth: 40
+    gold: 16
+    experiencevalue: 16
+  attacker:
+    attackpower: 2
+- entity:
+    object:
+      xpos: 300
+      ypos: 300
+      size: 16
+    name: Barbol3
+    defense: 3
+    maxhealth: 40
+    currenthealth: 40
+    gold: 16
+    experiencevalue: 16
+  attacker:
+    attackpower: 2

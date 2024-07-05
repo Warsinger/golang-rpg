@@ -1,0 +1,7 @@
+- item:
+    object:
+      xpos: 15
+      ypos: 344
+      size: 15
+    value: 100
+    used: false

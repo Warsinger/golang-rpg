@@ -12,8 +12,8 @@ import (
 type Player struct {
 	Entity
 	Attacker
-	experience int
-	level      int
+	Experience int `yaml:"experience"`
+	Level      int `yaml:"level"`
 }
 
 func (p *Player) TextOffset() (float32, float32) {
@@ -30,7 +30,7 @@ func (p *Player) Draw(screen *ebiten.Image) {
 	} else {
 		c = color.RGBA{128, 128, 128, 255}
 	}
-	vector.DrawFilledCircle(screen, p.x, p.y, p.size, c, true)
+	vector.DrawFilledCircle(screen, p.X, p.Y, p.Size, c, true)
 	p.DrawInfo(screen, p.TextOffset)
 }
 
@@ -43,26 +43,26 @@ func (p *Player) AttackMonster(m *Monster) {
 }
 
 func (p *Player) AddExperience(xp int) {
-	p.experience += xp
-	newLevel := p.experience / 25
-	if newLevel > p.level {
+	p.Experience += xp
+	newLevel := p.Experience / 25
+	if newLevel > p.Level {
 		p.LevelUp(newLevel)
 	}
 }
 
 func (p *Player) LevelUp(newLevel int) {
-	p.attack++
-	p.level = newLevel
+	p.AttackPower++
+	p.Level = newLevel
 	fmt.Println("Level Up!")
 }
 
 func (p *Player) DrawInfo(screen *ebiten.Image, textOffset func() (float32, float32)) {
 	// Draw health inside the character
 	var infoText string
-	if p.currentHealth > 0 {
-		infoText = fmt.Sprintf("%s(%d)\n%d/%d\n%dg\n", p.name, p.level, p.currentHealth, p.maxHealth, p.gold)
+	if p.CurrentHealth > 0 {
+		infoText = fmt.Sprintf("%s(%d)\n%d/%d\n%dg\n", p.Name, p.Level, p.CurrentHealth, p.MaxHealth, p.Gold)
 	} else {
-		infoText = fmt.Sprintf("Dead\n%s", p.name)
+		infoText = fmt.Sprintf("Dead\n%s", p.Name)
 	}
 	x, y := textOffset()
 	op := &text.DrawOptions{}

@@ -5,6 +5,7 @@ go 1.22.5
 require (
 	github.com/hajimehoshi/ebiten v1.12.12
 	github.com/hajimehoshi/ebiten/v2 v2.7.6
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
