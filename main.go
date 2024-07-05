@@ -1,41 +1,10 @@
 package main
 
 import (
-	"bytes"
 	"log"
 
-	"github.com/hajimehoshi/ebiten/examples/resources/fonts"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
-
-const (
-	screenWidth  = 800
-	screenHeight = 600
-)
-
-var (
-	mplusFaceSource *text.GoTextFaceSource
-	mplusNormalFace *text.GoTextFace
-	// mplusBigFace    *text.GoTextFace
-)
-
-func init() {
-	s, err := text.NewGoTextFaceSource(bytes.NewReader(fonts.ArcadeN_ttf))
-	if err != nil {
-		log.Fatal(err)
-	}
-	mplusFaceSource = s
-
-	mplusNormalFace = &text.GoTextFace{
-		Source: mplusFaceSource,
-		Size:   8,
-	}
-	// mplusBigFace = &text.GoTextFace{
-	// 	Source: mplusFaceSource,
-	// 	Size:   24,
-	// }
-}
 
 func main() {
 	game := &Game{

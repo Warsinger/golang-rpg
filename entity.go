@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"log"
 	"math"
 	"math/rand/v2"
 
+	"github.com/hajimehoshi/ebiten/examples/resources/fonts"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
@@ -70,4 +73,27 @@ func (a *Attacker) Attack(d *Entity) {
 	// calculate the attackers's attack value and subtract from defender's health
 	pAttack := int(math.Max(float64(rand.IntN(a.attack+1)-d.defense), 0))
 	d.currentHealth = int(math.Max(float64(d.currentHealth-pAttack), 0))
+}
+
+var (
+	mplusFaceSource *text.GoTextFaceSource
+	mplusNormalFace *text.GoTextFace
+	// mplusBigFace    *text.GoTextFace
+)
+
+func init() {
+	s, err := text.NewGoTextFaceSource(bytes.NewReader(fonts.ArcadeN_ttf))
+	if err != nil {
+		log.Fatal(err)
+	}
+	mplusFaceSource = s
+
+	mplusNormalFace = &text.GoTextFace{
+		Source: mplusFaceSource,
+		Size:   8,
+	}
+	// mplusBigFace = &text.GoTextFace{
+	// 	Source: mplusFaceSource,
+	// 	Size:   24,
+	// }
 }

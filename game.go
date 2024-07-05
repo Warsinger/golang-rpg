@@ -6,6 +6,11 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
+const (
+	screenWidth  = 800
+	screenHeight = 600
+)
+
 type Game struct {
 	player   *Player
 	monsters []*Monster
@@ -15,6 +20,9 @@ type Game struct {
 func (g *Game) Update() error {
 	if ebiten.IsKeyPressed(ebiten.KeyR) {
 		g.Init()
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyQ) {
+		return ebiten.Termination
 	}
 	if g.player.Alive() {
 		// Handle input
