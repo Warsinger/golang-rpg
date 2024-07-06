@@ -5,15 +5,17 @@ import (
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 	"gopkg.in/yaml.v3"
 )
 
-const (
-	screenWidth  = 800
-	screenHeight = 600
-)
-
+type Board struct {
+	Width, Height         int
+	GridWidth, GridHeight int
+}
 type Game struct {
+	Board    Board
 	Player   *Player
 	Monsters []*Monster
 	Items    []Usable
@@ -22,10 +24,10 @@ type Game struct {
 func (g *Game) Update() error {
 	// TODO look into ebitenutil.IsKeyJustPressed
 
-	if ebiten.IsKeyPressed(ebiten.KeyR) {
+	if inpututil.IsKeyJustPressed(ebiten.KeyR) {
 		g.Init()
 	}
-	if ebiten.IsKeyPressed(ebiten.KeyQ) {
+	if inpututil.IsKeyJustPressed(ebiten.KeyQ) {
 		g.Save()
 		return ebiten.Termination
 	}
@@ -44,7 +46,7 @@ func (g *Game) Update() error {
 			g.Player.Y -= 2
 		}
 
-		if ebiten.IsKeyPressed(ebiten.KeyA) {
+		if inpututil.IsKeyJustPressed(ebiten.KeyA) {
 			for _, m := range g.Monsters {
 				if m.Alive() && inRange(&g.Player.Object, &m.Object) {
 					g.Player.AttackMonster(m)
@@ -83,13 +85,17 @@ func (g *Game) Init() {
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0, 0, 0, 255}) // Clear screen
+	g.DrawGrid(screen)
+
 	g.Player.Draw(screen)
+
 	for _, m := range g.Monsters {
 		m.Draw(screen)
 		if inRange(&g.Player.Object, &m.Object) {
 			m.Select(screen)
 		}
 	}
+
 	for _, i := range g.Items {
 		i.Draw(screen)
 		if i.inRange(&g.Player.Entity) {
@@ -98,8 +104,19 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 }
 
+func (g *Game) DrawGrid(screen *ebiten.Image) {
+	size := screen.Bounds().Size()
+
+	for i := 0; i < size.Y; i += g.Board.GridHeight {
+		vector.StrokeLine(screen, 0, float32(i), float32(size.X), float32(i), 1, color.White, true)
+	}
+	for i := 0; i < size.X; i += g.Board.GridWidth {
+		vector.StrokeLine(screen, float32(i), 0, float32(i), float32(size.Y), 1, color.White, true)
+	}
+}
+
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
-	return screenWidth, screenHeight
+	return g.Board.Width, g.Board.Height
 }
 
 func (g *Game) Save() error {

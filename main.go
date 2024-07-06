@@ -8,7 +8,8 @@ import (
 )
 
 func main() {
-	game := &Game{
+	g := &Game{
+		Board:  Board{Width: 800, Height: 600, GridWidth: 20, GridHeight: 20},
 		Player: &Player{Entity: Entity{Name: "Warsinger", Object: Object{Size: 16}, Defense: 1, MaxHealth: 100}, Level: 1, Attacker: Attacker{AttackPower: 6}},
 		// Monsters: []*Monster{
 		// 	{Entity: Entity{Name: "Gorgon", Object: Object{Size: 32}, Defense: 2, MaxHealth: 75}, Attacker: Attacker{AttackPower: 4}},
@@ -23,7 +24,7 @@ func main() {
 		// 	&Health{Item: Item{Value: 50, Object: Object{324, 44, 15}}},
 		// },
 	}
-	game.Init()
+	g.Init()
 
 	fmt.Println("Arrow Keys to move")
 	fmt.Println("A key to attack monster when in range")
@@ -31,9 +32,9 @@ func main() {
 	fmt.Println("R key to reset the game")
 	fmt.Println("Q key to quit the game")
 
-	ebiten.SetWindowSize(screenWidth, screenHeight)
+	ebiten.SetWindowSize(g.Board.Width, g.Board.Height)
 	ebiten.SetWindowTitle("Basic RPG")
-	if err := ebiten.RunGame(game); err != nil {
+	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal(err)
 	}
 }
