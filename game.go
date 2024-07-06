@@ -20,6 +20,8 @@ type Game struct {
 }
 
 func (g *Game) Update() error {
+	// TODO look into ebitenutil.IsKeyJustPressed
+
 	if ebiten.IsKeyPressed(ebiten.KeyR) {
 		g.Init()
 	}
