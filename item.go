@@ -15,11 +15,11 @@ type Item struct {
 }
 
 type Usable interface {
-	Draw(screen *ebiten.Image)
-	Select(screen *ebiten.Image)
+	Draw(screen *ebiten.Image, b *Board)
+	Select(screen *ebiten.Image, b *Board)
 
 	Use(e *Entity)
-	inRange(e *Entity) bool
+	inRange(e *Entity, reach int) bool
 	Refresh()
 }
 
@@ -49,32 +49,34 @@ func (i *Item) Refresh() {
 	i.Used = false
 }
 
-func (i *Item) inRange(e *Entity) bool {
-	return inRange(&i.Object, &e.Object)
+func (i *Item) inRange(e *Entity, reach int) bool {
+	return inRange(&i.Object, &e.Object, reach)
 }
 
-func (t *Treasure) Draw(screen *ebiten.Image) {
-	drawItem(screen, &t.Item, color.RGBA{255, 215, 0, 255})
+func (t *Treasure) Draw(screen *ebiten.Image, b *Board) {
+	drawItem(screen, &t.Item, color.RGBA{255, 215, 0, 255}, b)
 
 	// t.DrawInfo(screen, t.TextOffset)
 
 }
-func (h *HealthPack) Draw(screen *ebiten.Image) {
-	drawItem(screen, &h.Item, color.RGBA{100, 255, 100, 255})
+func (h *HealthPack) Draw(screen *ebiten.Image, b *Board) {
+	drawItem(screen, &h.Item, color.RGBA{100, 255, 100, 255}, b)
 
 	// t.DrawInfo(screen, t.TextOffset)
 }
 
-func drawItem(screen *ebiten.Image, i *Item, c color.Color) {
+func drawItem(screen *ebiten.Image, i *Item, c color.Color, b *Board) {
 	if !i.Used {
-		offset := i.Size / 2
-		vector.DrawFilledRect(screen, i.X-offset, i.Y-offset, i.Size, i.Size, c, true)
+		x, y := gridToXY(i.GridX, i.GridY, b)
+		s := float32(i.Size * b.GridSize)
+		vector.DrawFilledRect(screen, x, y, s, s, c, true)
 	}
 }
 
-func (i *Item) Select(screen *ebiten.Image) {
+func (i *Item) Select(screen *ebiten.Image, b *Board) {
 	if !i.Used {
-		offset := i.Size / 2
-		vector.StrokeRect(screen, i.X-offset, i.Y-offset, i.Size, i.Size, 2, color.RGBA{0, 255, 255, 255}, true)
+		x, y := gridToXY(i.GridX, i.GridY, b)
+		s := float32(i.Size * b.GridSize)
+		vector.StrokeRect(screen, x, y, s, s, 2, color.RGBA{0, 255, 255, 255}, true)
 	}
 }

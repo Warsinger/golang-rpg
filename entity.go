@@ -13,9 +13,9 @@ import (
 )
 
 type Object struct {
-	X    float32 `yaml:"xpos"`
-	Y    float32 `yaml:"ypos"`
-	Size float32
+	GridX int
+	GridY int
+	Size  int
 }
 
 type Entity struct {
@@ -38,7 +38,7 @@ func (e *Entity) Heal() {
 	e.CurrentHealth = e.MaxHealth
 }
 
-func (e *Entity) DrawInfo(screen *ebiten.Image, textOffset func() (float32, float32)) {
+func (e *Entity) DrawInfo(screen *ebiten.Image, x, y float32) {
 	// Draw health inside the character
 	var infoText string
 	if e.CurrentHealth > 0 {
@@ -46,22 +46,11 @@ func (e *Entity) DrawInfo(screen *ebiten.Image, textOffset func() (float32, floa
 	} else {
 		infoText = fmt.Sprintf("Dead\n%s", e.Name)
 	}
-	x, y := textOffset()
+
 	op := &text.DrawOptions{}
 	op.GeoM.Translate(float64(x), float64(y))
 	op.LineSpacing = mplusNormalFace.Size * 1.5
 	text.Draw(screen, infoText, mplusNormalFace, op)
-}
-
-func distance(o1, o2 *Object) float64 {
-	x := float64(o1.X - o2.X)
-	y := float64(o1.Y - o2.Y)
-	return math.Sqrt(x*x + y*y)
-}
-
-func inRange(o1, o2 *Object) bool {
-	// if the distance 2 objects is < the sum of their sizes they can interact
-	return distance(o1, o2) < float64(o1.Size+o2.Size)
 }
 
 func (a *Attacker) Attack(d *Entity) {

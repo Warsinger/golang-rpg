@@ -1,28 +1,28 @@
 - item:
     object:
-      xpos: 127
-      ypos: 65
-      size: 15
+      gridx: 6
+      gridy: 3
+      size: 1
     value: 50
     used: false
 - item:
     object:
-      xpos: 324
-      ypos: 44
-      size: 15
+      gridx: 16
+      gridy: 2
+      size: 1
     value: 50
     used: false
 - item:
     object:
-      xpos: 614
-      ypos: 440
-      size: 15
+      gridx: 31
+      gridy: 22
+      size: 1
     value: 75
     used: false
 - item:
     object:
-      xpos: 300
-      ypos: 330
-      size: 15
+      gridx: 15
+      gridy: 16
+      size: 1
     value: 60
     used: false

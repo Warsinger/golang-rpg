@@ -1,14 +1,14 @@
 - item:
     object:
-      xpos: 15
-      ypos: 344
-      size: 15
+      gridx: 1
+      gridy: 17
+      size: 1
     value: 100
     used: false
 - item:
     object:
-      xpos: 451
-      ypos: 532
-      size: 15
+      gridx: 22
+      gridy: 28
+      size: 1
     value: 1000
     used: false

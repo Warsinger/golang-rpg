@@ -11,8 +11,8 @@ import (
 )
 
 type Board struct {
-	Width, Height         int
-	GridWidth, GridHeight int
+	Width, Height int
+	GridSize      int
 }
 type Game struct {
 	Board    Board
@@ -33,22 +33,22 @@ func (g *Game) Update() error {
 	}
 	if g.Player.Alive() {
 		// Handle input
-		if ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
-			g.Player.X += 2
+		if inpututil.IsKeyJustPressed(ebiten.KeyArrowRight) {
+			g.Player.GridX += 1
 		}
-		if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
-			g.Player.X -= 2
+		if inpututil.IsKeyJustPressed(ebiten.KeyArrowLeft) {
+			g.Player.GridX -= 1
 		}
-		if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
-			g.Player.Y += 2
+		if inpututil.IsKeyJustPressed(ebiten.KeyArrowDown) {
+			g.Player.GridY += 1
 		}
-		if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
-			g.Player.Y -= 2
+		if inpututil.IsKeyJustPressed(ebiten.KeyArrowUp) {
+			g.Player.GridY -= 1
 		}
 
 		if inpututil.IsKeyJustPressed(ebiten.KeyA) {
 			for _, m := range g.Monsters {
-				if m.Alive() && inRange(&g.Player.Object, &m.Object) {
+				if m.Alive() && inRange(&g.Player.Object, &m.Object, 1) {
 					g.Player.AttackMonster(m)
 					if !m.Alive() {
 						// if moster dies, drop some treasure
@@ -61,7 +61,7 @@ func (g *Game) Update() error {
 		}
 		if ebiten.IsKeyPressed(ebiten.KeyU) {
 			for _, i := range g.Items {
-				if i.inRange(&g.Player.Entity) {
+				if i.inRange(&g.Player.Entity, 1) {
 					i.Use(&g.Player.Entity)
 				}
 			}
@@ -73,8 +73,8 @@ func (g *Game) Update() error {
 
 func (g *Game) Init() {
 	g.Player.Heal()
-	g.Player.X = 50
-	g.Player.Y = 50
+	g.Player.GridX = 1
+	g.Player.GridY = 1
 	g.Player.Gold = 10
 
 	err := g.Load()
@@ -87,19 +87,20 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0, 0, 0, 255}) // Clear screen
 	g.DrawGrid(screen)
 
-	g.Player.Draw(screen)
+	b := &g.Board
+	g.Player.Draw(screen, b)
 
 	for _, m := range g.Monsters {
-		m.Draw(screen)
-		if inRange(&g.Player.Object, &m.Object) {
-			m.Select(screen)
+		m.Draw(screen, &g.Board)
+		if inRange(&g.Player.Object, &m.Object, 1) {
+			m.Select(screen, b)
 		}
 	}
 
 	for _, i := range g.Items {
-		i.Draw(screen)
-		if i.inRange(&g.Player.Entity) {
-			i.Select(screen)
+		i.Draw(screen, b)
+		if i.inRange(&g.Player.Entity, 1) {
+			i.Select(screen, b)
 		}
 	}
 }
@@ -107,10 +108,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 func (g *Game) DrawGrid(screen *ebiten.Image) {
 	size := screen.Bounds().Size()
 
-	for i := 0; i < size.Y; i += g.Board.GridHeight {
+	for i := 0; i < size.Y; i += g.Board.GridSize {
 		vector.StrokeLine(screen, 0, float32(i), float32(size.X), float32(i), 1, color.White, true)
 	}
-	for i := 0; i < size.X; i += g.Board.GridWidth {
+	for i := 0; i < size.X; i += g.Board.GridSize {
 		vector.StrokeLine(screen, float32(i), 0, float32(i), float32(size.Y), 1, color.White, true)
 	}
 }

@@ -12,28 +12,24 @@ type Monster struct {
 	Attacker
 }
 
-func (m *Monster) Draw(screen *ebiten.Image) {
+func (m *Monster) Draw(screen *ebiten.Image, b *Board) {
+	x, y := gridToXY(m.GridX, m.GridY, b)
 	if m.Alive() {
-		offset := m.Size / 2
-		vector.DrawFilledRect(screen, m.X-offset, m.Y-offset, m.Size, m.Size, color.RGBA{255, 0, 0, 255}, true)
+		s := float32(m.Size * b.GridSize)
+		vector.DrawFilledRect(screen, x, y, s, s, color.RGBA{255, 0, 0, 255}, true)
 	}
-	m.DrawInfo(screen, m.TextOffset)
+	m.DrawInfo(screen, x, y)
 
 }
 
-func (m *Monster) Select(screen *ebiten.Image) {
+func (m *Monster) Select(screen *ebiten.Image, b *Board) {
 	if m.Alive() {
-		offset := m.Size / 2
-		vector.StrokeRect(screen, m.X-offset, m.Y-offset, m.Size, m.Size, 2, color.RGBA{0, 255, 255, 255}, true)
+		x, y := gridToXY(m.GridX, m.GridY, b)
+		s := float32(m.Size * b.GridSize)
+		vector.StrokeRect(screen, x, y, s, s, 2, color.RGBA{0, 255, 255, 255}, true)
 	}
-}
-
-func (e *Monster) TextOffset() (float32, float32) {
-	x := e.X - e.Size/2
-	y := e.Y - e.Size/2
-	return x, y
 }
 
 func (m *Monster) Loot() Usable {
-	return &Treasure{Item: Item{Value: m.Gold, Object: Object{m.X + m.Size/2, m.Y + m.Size/2, 15}}}
+	return &Treasure{Item: Item{Value: m.Gold, Object: Object{m.GridX + 1, m.GridY, 1}}}
 }

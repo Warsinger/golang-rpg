@@ -1,8 +1,8 @@
 - entity:
     object:
-      xpos: 120
-      ypos: 90
-      size: 32
+      gridx: 6
+      gridy: 4
+      size: 2
     name: Gorgon
     defense: 2
     maxhealth: 75
@@ -13,9 +13,9 @@
     attackpower: 4
 - entity:
     object:
-      xpos: 600
-      ypos: 500
-      size: 32
+      gridx: 30
+      gridy: 25
+      size: 2
     name: Gorgon Lord
     defense: 3
     maxhealth: 100
@@ -26,9 +26,9 @@
     attackpower: 5
 - entity:
     object:
-      xpos: 450
-      ypos: 150
-      size: 16
+      gridx: 22
+      gridy: 13
+      size: 1
     name: Barbol
     defense: 3
     maxhealth: 40
@@ -39,9 +39,9 @@
     attackpower: 2
 - entity:
     object:
-      xpos: 200
-      ypos: 200
-      size: 16
+      gridx: 10
+      gridy: 10
+      size: 1
     name: Barbol Prime
     defense: 3
     maxhealth: 40
@@ -52,9 +52,9 @@
     attackpower: 2
 - entity:
     object:
-      xpos: 150
-      ypos: 209
-      size: 16
+      gridx: 7
+      gridy: 10
+      size: 1
     name: Barbol Ardent
     defense: 3
     maxhealth: 40
@@ -65,9 +65,9 @@
     attackpower: 2
 - entity:
     object:
-      xpos: 200
-      ypos: 500
-      size: 16
+      gridx: 10
+      gridy: 25
+      size: 2
     name: Barbol Matriarch
     defense: 3
     maxhealth: 40
