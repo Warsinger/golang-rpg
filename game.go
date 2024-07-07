@@ -39,20 +39,21 @@ func (g *GameInfo) Update() error {
 	}
 	if g.Player.Alive() {
 		// Handle input
-		if inpututil.IsKeyJustPressed(ebiten.KeyArrowRight) {
+		if ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
 			g.Player.Move(Right, g.Board)
 		}
-		if inpututil.IsKeyJustPressed(ebiten.KeyArrowLeft) {
+		if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
 			g.Player.Move(Left, g.Board)
 		}
-		if inpututil.IsKeyJustPressed(ebiten.KeyArrowDown) {
+		if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
 			g.Player.Move(Down, g.Board)
 		}
-		if inpututil.IsKeyJustPressed(ebiten.KeyArrowUp) {
+		if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
 			g.Player.Move(Up, g.Board)
 		}
 
 		if inpututil.IsKeyJustPressed(ebiten.KeyA) {
+			// TODO optimize to look for monsters in reach rather than all monsters
 			for _, m := range g.Monsters {
 				if m.Alive() && inRange(g.Player, m, 1) {
 					g.Player.AttackMonster(m)
@@ -71,6 +72,7 @@ func (g *GameInfo) Update() error {
 			}
 		}
 		if inpututil.IsKeyJustPressed(ebiten.KeyU) {
+			// TODO optimize to look for items in reach rather than all items
 			for _, i := range g.Items {
 				if i.inRange(g.Player, 1) {
 					i.Use(g.Player)
