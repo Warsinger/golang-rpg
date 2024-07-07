@@ -42,8 +42,8 @@ func LoadPlayer(b Board) (Player, error) {
 	if err != nil {
 		return nil, err
 	}
-	// TODO can't have player occupy spaces or it won't be able to move if size > 0 till we fix the occupation check to check for self
-	// b.AddObjectToBoard(&player)
+
+	b.AddObjectToBoard(&player)
 	return &player, nil
 }
 

@@ -41,7 +41,7 @@ func (m *MonsterInfo) Select(screen *ebiten.Image, b Board) {
 }
 
 func (m *MonsterInfo) Loot() Item {
-	return &TreasureInfo{ItemInfo: ItemInfo{Value: m.Gold, ObjectInfo: ObjectInfo{m.GridX + 1, m.GridY, 1}}}
+	return &TreasureInfo{ItemInfo: ItemInfo{Value: m.Gold, ObjectInfo: ObjectInfo{m.GridX, m.GridY, 1}}}
 }
 
 func LoadMonsters(b Board) ([]MonsterInfo, error) {
