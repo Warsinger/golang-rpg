@@ -1,6 +1,8 @@
 package main
 
-import "math"
+import (
+	"math"
+)
 
 func inRange(o1, o2 *Object, reach int) bool {
 	var dx, dy float64
@@ -23,13 +25,11 @@ func maxXY(o *Object) (float64, float64) {
 	return float64(o.GridX + o.Size - 1), float64(o.GridY + o.Size - 1)
 }
 
-// func distance(o1, o2 *Object) int {
-// 	x := math.Abs(float64(o1.GridX - o2.GridX))
-// 	y := float64(o1.GridY - o2.GridY)
-// 	return math.Sqrt(x*x + y*y)
-// }
+type Direction int
 
-func gridToXY(gridX, gridY int, b *Board) (float32, float32) {
-	//return the top left point of the grid
-	return float32(gridX * b.GridSize), float32(gridY * b.GridSize)
-}
+const (
+	Up Direction = iota
+	Down
+	Left
+	Right
+)

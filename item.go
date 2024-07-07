@@ -21,6 +21,7 @@ type Usable interface {
 	Use(e *Entity)
 	inRange(e *Entity, reach int) bool
 	Refresh()
+	GetObject() *Object
 }
 
 type Treasure struct {
@@ -49,6 +50,10 @@ func (i *Item) Refresh() {
 	i.Used = false
 }
 
+func (i *Item) GetObject() *Object {
+	return &i.Object
+}
+
 func (i *Item) inRange(e *Entity, reach int) bool {
 	return inRange(&i.Object, &e.Object, reach)
 }
@@ -67,7 +72,7 @@ func (h *HealthPack) Draw(screen *ebiten.Image, b *Board) {
 
 func drawItem(screen *ebiten.Image, i *Item, c color.Color, b *Board) {
 	if !i.Used {
-		x, y := gridToXY(i.GridX, i.GridY, b)
+		x, y := b.GridToXY(i.GridX, i.GridY)
 		s := float32(i.Size * b.GridSize)
 		vector.DrawFilledRect(screen, x, y, s, s, c, true)
 	}
@@ -75,7 +80,7 @@ func drawItem(screen *ebiten.Image, i *Item, c color.Color, b *Board) {
 
 func (i *Item) Select(screen *ebiten.Image, b *Board) {
 	if !i.Used {
-		x, y := gridToXY(i.GridX, i.GridY, b)
+		x, y := b.GridToXY(i.GridX, i.GridY)
 		s := float32(i.Size * b.GridSize)
 		vector.StrokeRect(screen, x, y, s, s, 2, color.RGBA{0, 255, 255, 255}, true)
 	}

@@ -23,7 +23,7 @@ func (p *Player) Draw(screen *ebiten.Image, b *Board) {
 	} else {
 		c = color.RGBA{128, 128, 128, 255}
 	}
-	x, y := gridToXY(p.GridX, p.GridY, b)
+	x, y := b.GridToXY(p.GridX, p.GridY)
 	x += float32(b.GridSize*p.Size) / 2
 	y += float32(b.GridSize*p.Size) / 2
 	r := float32(p.Size*b.GridSize) / 2
@@ -65,4 +65,25 @@ func (p *Player) DrawInfo(screen *ebiten.Image, x, y float32) {
 	op.GeoM.Translate(float64(x), float64(y))
 	op.LineSpacing = mplusNormalFace.Size * 1.5
 	text.Draw(screen, infoText, mplusNormalFace, op)
+}
+
+func (p *Player) Move(direction Direction, b *Board) bool {
+	gx, gy := p.GridX, p.GridY
+	switch direction {
+	case Up:
+		gy -= 1
+	case Down:
+		gy += 1
+	case Right:
+		gx += 1
+	case Left:
+		gx -= 1
+	}
+
+	if b.CanOccupySpace(&p.Object, gx, gy) {
+		p.GridX = gx
+		p.GridY = gy
+		return true
+	}
+	return false
 }

@@ -13,7 +13,7 @@ type Monster struct {
 }
 
 func (m *Monster) Draw(screen *ebiten.Image, b *Board) {
-	x, y := gridToXY(m.GridX, m.GridY, b)
+	x, y := b.GridToXY(m.GridX, m.GridY)
 	if m.Alive() {
 		s := float32(m.Size * b.GridSize)
 		vector.DrawFilledRect(screen, x, y, s, s, color.RGBA{255, 0, 0, 255}, true)
@@ -24,7 +24,7 @@ func (m *Monster) Draw(screen *ebiten.Image, b *Board) {
 
 func (m *Monster) Select(screen *ebiten.Image, b *Board) {
 	if m.Alive() {
-		x, y := gridToXY(m.GridX, m.GridY, b)
+		x, y := b.GridToXY(m.GridX, m.GridY)
 		s := float32(m.Size * b.GridSize)
 		vector.StrokeRect(screen, x, y, s, s, 2, color.RGBA{0, 255, 255, 255}, true)
 	}

@@ -10,20 +10,14 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type Board struct {
-	Width, Height int
-	GridSize      int
-}
 type Game struct {
-	Board    Board
+	Board    *Board
 	Player   *Player
 	Monsters []*Monster
 	Items    []Usable
 }
 
 func (g *Game) Update() error {
-	// TODO look into ebitenutil.IsKeyJustPressed
-
 	if inpututil.IsKeyJustPressed(ebiten.KeyR) {
 		g.Init()
 	}
@@ -34,16 +28,16 @@ func (g *Game) Update() error {
 	if g.Player.Alive() {
 		// Handle input
 		if inpututil.IsKeyJustPressed(ebiten.KeyArrowRight) {
-			g.Player.GridX += 1
+			g.Player.Move(Right, g.Board)
 		}
 		if inpututil.IsKeyJustPressed(ebiten.KeyArrowLeft) {
-			g.Player.GridX -= 1
+			g.Player.Move(Left, g.Board)
 		}
 		if inpututil.IsKeyJustPressed(ebiten.KeyArrowDown) {
-			g.Player.GridY += 1
+			g.Player.Move(Down, g.Board)
 		}
 		if inpututil.IsKeyJustPressed(ebiten.KeyArrowUp) {
-			g.Player.GridY -= 1
+			g.Player.Move(Up, g.Board)
 		}
 
 		if inpututil.IsKeyJustPressed(ebiten.KeyA) {
@@ -51,18 +45,24 @@ func (g *Game) Update() error {
 				if m.Alive() && inRange(&g.Player.Object, &m.Object, 1) {
 					g.Player.AttackMonster(m)
 					if !m.Alive() {
+						// remove from the board
+						g.Board.RemoveObjectFromBoard(&m.Object)
 						// if moster dies, drop some treasure
-						g.Items = append(g.Items, m.Loot())
+						loot := m.Loot()
+						g.Items = append(g.Items, loot)
+						g.Board.AddObjectToBoard(loot.GetObject())
+
 						// get some experience
 						g.Player.AddExperience(m.ExperienceValue)
 					}
 				}
 			}
 		}
-		if ebiten.IsKeyPressed(ebiten.KeyU) {
+		if inpututil.IsKeyJustPressed(ebiten.KeyU) {
 			for _, i := range g.Items {
 				if i.inRange(&g.Player.Entity, 1) {
 					i.Use(&g.Player.Entity)
+					g.Board.RemoveObjectFromBoard(i.GetObject())
 				}
 			}
 		}
@@ -72,14 +72,28 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Init() {
-	g.Player.Heal()
-	g.Player.GridX = 1
-	g.Player.GridY = 1
-	g.Player.Gold = 10
+	p := g.Player
+	p.Heal()
+	p.GridX = 1
+	p.GridY = 1
+	p.Gold = 10
 
 	err := g.Load()
 	if err != nil {
 		panic(err)
+	}
+
+	// go through all objects on the board and initiaze the board state
+	b := g.Board
+	b.Occupied = make([]bool, b.Width*b.Height/b.GridSize/b.GridSize)
+	// go through all the board members and add in the squares they occupy
+	// occupyGridSpace(&p.Object, b)
+	for _, m := range g.Monsters {
+		// fmt.Println(m.Name)
+		b.AddObjectToBoard(&m.Object)
+	}
+	for _, i := range g.Items {
+		b.AddObjectToBoard(i.GetObject())
 	}
 }
 
@@ -87,11 +101,11 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0, 0, 0, 255}) // Clear screen
 	g.DrawGrid(screen)
 
-	b := &g.Board
+	b := g.Board
 	g.Player.Draw(screen, b)
 
 	for _, m := range g.Monsters {
-		m.Draw(screen, &g.Board)
+		m.Draw(screen, b)
 		if inRange(&g.Player.Object, &m.Object, 1) {
 			m.Select(screen, b)
 		}
