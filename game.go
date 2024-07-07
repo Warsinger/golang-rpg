@@ -151,6 +151,7 @@ func (g *GameInfo) Load() error {
 	if err != nil {
 		return err
 	}
+	// TODO when loading assets make sure they don't collide on the board
 
 	g.Player, err = LoadPlayer(g.Board)
 	if err != nil {

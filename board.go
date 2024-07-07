@@ -7,15 +7,17 @@ import (
 )
 
 type BoardInfo struct {
-	Width    int
-	Height   int
-	GridSize int
-	occupied []Object
+	GridWidth  int
+	GridHeight int
+	GridSize   int
+	occupied   []Object
 }
 
 type Board interface {
 	GetWidth() int
 	GetHeight() int
+	GetGridWidth() int
+	GetGridHeight() int
 	GetGridSize() int
 	GridToXY(gridX, gridY int) (float32, float32)
 	AddObjectToBoard(o Object)
@@ -35,7 +37,7 @@ func LoadBoard() (Board, error) {
 	if err != nil {
 		return nil, err
 	}
-	board.occupied = make([]Object, board.Width*board.Height/board.GridSize/board.GridSize)
+	board.occupied = make([]Object, board.GridWidth*board.GridHeight)
 
 	return &board, nil
 }
@@ -64,6 +66,10 @@ func (b *BoardInfo) UpdateBoardForObject(o Object, occupy bool) {
 }
 
 func (b *BoardInfo) CanOccupySpace(o Object, gx, gy int) bool {
+	if gx < 0 || gy < 0 || gx > b.GridWidth-o.GetSize() || gy > b.GridHeight-o.GetSize() {
+		// don't move off the edge of the board
+		return false
+	}
 	for i := gx; i < gx+o.GetSize(); i++ {
 		for j := gy; j < gy+o.GetSize(); j++ {
 			occupier := b.occupied[b.GridToIndex(i, j)]
@@ -77,15 +83,23 @@ func (b *BoardInfo) CanOccupySpace(o Object, gx, gy int) bool {
 }
 
 func (b *BoardInfo) GridToIndex(x, y int) int {
-	return x*(b.Height/b.GetGridSize()) + y
+	return x*(b.GridHeight) + y
 }
 
 func (b *BoardInfo) GetWidth() int {
-	return b.Width
+	return b.GridWidth * b.GridSize
 }
 
 func (b *BoardInfo) GetHeight() int {
-	return b.Height
+	return b.GridHeight * b.GridSize
+}
+
+func (b *BoardInfo) GetGridWidth() int {
+	return b.GridWidth
+}
+
+func (b *BoardInfo) GetGridHeight() int {
+	return b.GridHeight
 }
 
 func (b *BoardInfo) GetGridSize() int {
