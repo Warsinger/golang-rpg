@@ -10,14 +10,26 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type Game struct {
-	Board    *Board
-	Player   *Player
-	Monsters []*Monster
-	Items    []Usable
+type GameInfo struct {
+	Board    Board
+	Player   Player
+	Monsters []Monster
+	Items    []Item
 }
 
-func (g *Game) Update() error {
+type Game interface {
+	GetBoard() Board
+	GetPlayer() Player
+	GetMonsters() []Monster
+	GetItems() []Item
+	GetEntities() []Entity
+	GetObjects() []Object
+	Init()
+	Load() error
+	Save() error
+}
+
+func (g *GameInfo) Update() error {
 	if inpututil.IsKeyJustPressed(ebiten.KeyR) {
 		g.Init()
 	}
@@ -42,27 +54,27 @@ func (g *Game) Update() error {
 
 		if inpututil.IsKeyJustPressed(ebiten.KeyA) {
 			for _, m := range g.Monsters {
-				if m.Alive() && inRange(&g.Player.Object, &m.Object, 1) {
+				if m.Alive() && inRange(g.Player, m, 1) {
 					g.Player.AttackMonster(m)
 					if !m.Alive() {
 						// remove from the board
-						g.Board.RemoveObjectFromBoard(&m.Object)
+						g.Board.RemoveObjectFromBoard(m)
 						// if moster dies, drop some treasure
 						loot := m.Loot()
 						g.Items = append(g.Items, loot)
-						g.Board.AddObjectToBoard(loot.GetObject())
+						g.Board.AddObjectToBoard(loot)
 
 						// get some experience
-						g.Player.AddExperience(m.ExperienceValue)
+						g.Player.AddExperience(m.GetExperienceValue())
 					}
 				}
 			}
 		}
 		if inpututil.IsKeyJustPressed(ebiten.KeyU) {
 			for _, i := range g.Items {
-				if i.inRange(&g.Player.Entity, 1) {
-					i.Use(&g.Player.Entity)
-					g.Board.RemoveObjectFromBoard(i.GetObject())
+				if i.inRange(g.Player, 1) {
+					i.Use(g.Player)
+					g.Board.RemoveObjectFromBoard(i)
 				}
 			}
 		}
@@ -71,70 +83,51 @@ func (g *Game) Update() error {
 	return nil
 }
 
-func (g *Game) Init() {
-	p := g.Player
-	p.Heal()
-	p.GridX = 1
-	p.GridY = 1
-	p.Gold = 10
-
+func (g *GameInfo) Init() {
 	err := g.Load()
 	if err != nil {
 		panic(err)
 	}
-
-	// go through all objects on the board and initiaze the board state
-	b := g.Board
-	b.Occupied = make([]bool, b.Width*b.Height/b.GridSize/b.GridSize)
-	// go through all the board members and add in the squares they occupy
-	// occupyGridSpace(&p.Object, b)
-	for _, m := range g.Monsters {
-		// fmt.Println(m.Name)
-		b.AddObjectToBoard(&m.Object)
-	}
-	for _, i := range g.Items {
-		b.AddObjectToBoard(i.GetObject())
-	}
 }
 
-func (g *Game) Draw(screen *ebiten.Image) {
+func (g *GameInfo) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0, 0, 0, 255}) // Clear screen
-	g.DrawGrid(screen)
+	g.drawGrid(screen)
 
 	b := g.Board
 	g.Player.Draw(screen, b)
 
 	for _, m := range g.Monsters {
 		m.Draw(screen, b)
-		if inRange(&g.Player.Object, &m.Object, 1) {
+		if inRange(g.Player, m, 1) {
 			m.Select(screen, b)
 		}
 	}
 
 	for _, i := range g.Items {
 		i.Draw(screen, b)
-		if i.inRange(&g.Player.Entity, 1) {
+		if i.inRange(g.Player, 1) {
 			i.Select(screen, b)
 		}
 	}
 }
 
-func (g *Game) DrawGrid(screen *ebiten.Image) {
+func (g *GameInfo) drawGrid(screen *ebiten.Image) {
 	size := screen.Bounds().Size()
 
-	for i := 0; i < size.Y; i += g.Board.GridSize {
+	for i := 0; i < size.Y; i += g.Board.GetGridSize() {
 		vector.StrokeLine(screen, 0, float32(i), float32(size.X), float32(i), 1, color.White, true)
 	}
-	for i := 0; i < size.X; i += g.Board.GridSize {
+	for i := 0; i < size.X; i += g.Board.GetGridSize() {
 		vector.StrokeLine(screen, float32(i), 0, float32(i), float32(size.Y), 1, color.White, true)
 	}
 }
 
-func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
-	return g.Board.Width, g.Board.Height
+func (g *GameInfo) Layout(outsideWidth, outsideHeight int) (int, int) {
+	return g.Board.GetWidth(), g.Board.GetHeight()
 }
 
-func (g *Game) Save() error {
+func (g *GameInfo) Save() error {
 	data, err := yaml.Marshal(g)
 	if err != nil {
 		return err
@@ -146,30 +139,33 @@ func (g *Game) Save() error {
 	return nil
 }
 
-func (g *Game) Load() error {
+func (g *GameInfo) Load() error {
 	g.Items = nil
 	g.Monsters = nil
+	g.Player = nil
 
-	yamlFile, err := os.ReadFile("config/treasures.yml")
-	if err != nil {
-		return err
-	}
-	var treasures []Treasure
-	err = yaml.Unmarshal(yamlFile, &treasures)
+	var err error
+	g.Board, err = LoadBoard()
 	if err != nil {
 		return err
 	}
 
+	g.Player, err = LoadPlayer(g.Board)
+	if err != nil {
+		return err
+	}
+
+	var treasures []TreasureInfo
+	treasures, err = LoadTreasures(g.Board)
+	if err != nil {
+		return err
+	}
 	for _, t := range treasures {
 		g.Items = append(g.Items, &t)
 	}
 
-	yamlFile, err = os.ReadFile("config/healthpacks.yml")
-	if err != nil {
-		return err
-	}
-	var healthPacks []HealthPack
-	err = yaml.Unmarshal(yamlFile, &healthPacks)
+	var healthPacks []HealthPackInfo
+	healthPacks, err = LoadHealthPacks(g.Board)
 	if err != nil {
 		return err
 	}
@@ -178,17 +174,39 @@ func (g *Game) Load() error {
 		g.Items = append(g.Items, &h)
 	}
 
-	yamlFile, err = os.ReadFile("config/monsters.yml")
-	if err != nil {
-		return err
-	}
-	var monsters []*Monster
-	err = yaml.Unmarshal(yamlFile, &monsters)
+	var monsters []MonsterInfo
+	monsters, err = LoadMonsters(g.Board)
 	if err != nil {
 		return err
 	}
 
-	g.Monsters = append(g.Monsters, monsters...)
+	for _, m := range monsters {
+		g.Monsters = append(g.Monsters, &m)
+	}
 
 	return nil
+}
+
+func (g *GameInfo) GetBoard() Board {
+	return g.Board
+}
+
+func (g *GameInfo) GetPlayer() Player {
+	return g.Player
+}
+
+func (g *GameInfo) GetMonsters() []Monster {
+	return g.Monsters
+}
+
+func (g *GameInfo) GetItems() []Item {
+	return g.Items
+}
+
+func (g *GameInfo) GetEntities() []Entity {
+	panic("not implemented")
+}
+
+func (g *GameInfo) GetObjects() []Object {
+	panic("not implemented")
 }

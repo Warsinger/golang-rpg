@@ -1,0 +1,15 @@
+entityinfo:
+  objectinfo:
+    gridx: 1
+    gridy: 1
+    size: 2
+  name: Warsinger
+  defense: 1
+  maxhealth: 100
+  currenthealth: 100
+  gold: 10
+  experiencevalue: 0
+attackinfo:
+  attackpower: 6
+experience: 0
+level: 1

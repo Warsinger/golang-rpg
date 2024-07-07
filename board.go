@@ -1,35 +1,68 @@
 package main
 
-type Board struct {
-	Width, Height int
-	GridSize      int
-	Occupied      []bool
+import (
+	"os"
+
+	"gopkg.in/yaml.v3"
+)
+
+type BoardInfo struct {
+	Width    int
+	Height   int
+	GridSize int
+	occupied []bool
 }
 
-func (b *Board) GridToXY(gridX, gridY int) (float32, float32) {
-	//return the top left point of the grid
-	return float32(gridX * b.GridSize), float32(gridY * b.GridSize)
+type Board interface {
+	GetWidth() int
+	GetHeight() int
+	GetGridSize() int
+	GridToXY(gridX, gridY int) (float32, float32)
+	AddObjectToBoard(o Object)
+	RemoveObjectFromBoard(o Object)
+	UpdateBoardForObject(o Object, value bool)
+	CanOccupySpace(o Object, gx, gy int) bool
+	GridToIndex(x, y int) int
 }
 
-func (b *Board) AddObjectToBoard(o *Object) {
+func LoadBoard() (Board, error) {
+	yamlFile, err := os.ReadFile("config/board.yml")
+	if err != nil {
+		return nil, err
+	}
+	var board BoardInfo
+	err = yaml.Unmarshal(yamlFile, &board)
+	if err != nil {
+		return nil, err
+	}
+	board.occupied = make([]bool, board.Width*board.Height/board.GridSize/board.GridSize)
+
+	return &board, nil
+}
+
+func (b *BoardInfo) GridToXY(gridX, gridY int) (float32, float32) {
+	return float32(gridX * b.GetGridSize()), float32(gridY * b.GetGridSize())
+}
+
+func (b *BoardInfo) AddObjectToBoard(o Object) {
 	b.UpdateBoardForObject(o, true)
 }
-func (b *Board) RemoveObjectFromBoard(o *Object) {
+func (b *BoardInfo) RemoveObjectFromBoard(o Object) {
 	b.UpdateBoardForObject(o, false)
 }
 
-func (b *Board) UpdateBoardForObject(o *Object, value bool) {
-	for i := o.GridX; i < o.GridX+o.Size; i++ {
-		for j := o.GridY; j < o.GridY+o.Size; j++ {
-			b.Occupied[b.GridToIndex(i, j)] = value
+func (b *BoardInfo) UpdateBoardForObject(o Object, value bool) {
+	for i := o.GetGridX(); i < o.GetGridX()+o.GetSize(); i++ {
+		for j := o.GetGridY(); j < o.GetGridY()+o.GetSize(); j++ {
+			b.occupied[b.GridToIndex(i, j)] = value
 		}
 	}
 }
 
-func (b *Board) CanOccupySpace(o *Object, gx, gy int) bool {
-	for i := gx; i < gx+o.Size; i++ {
-		for j := gy; j < gy+o.Size; j++ {
-			if b.Occupied[b.GridToIndex(i, j)] {
+func (b *BoardInfo) CanOccupySpace(o Object, gx, gy int) bool {
+	for i := gx; i < gx+o.GetSize(); i++ {
+		for j := gy; j < gy+o.GetSize(); j++ {
+			if b.occupied[b.GridToIndex(i, j)] {
 				return false
 			}
 		}
@@ -37,6 +70,18 @@ func (b *Board) CanOccupySpace(o *Object, gx, gy int) bool {
 	return true
 }
 
-func (b *Board) GridToIndex(x, y int) int {
-	return x*(b.Height/b.GridSize) + y
+func (b *BoardInfo) GridToIndex(x, y int) int {
+	return x*(b.Height/b.GetGridSize()) + y
+}
+
+func (b *BoardInfo) GetWidth() int {
+	return b.Width
+}
+
+func (b *BoardInfo) GetHeight() int {
+	return b.Height
+}
+
+func (b *BoardInfo) GetGridSize() int {
+	return b.GridSize
 }
