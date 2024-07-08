@@ -14,7 +14,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const spriteCount = 6
+const spriteCount = 4
 
 type AnimState string
 
@@ -106,7 +106,7 @@ func (p *PlayerInfo) Draw(screen *ebiten.Image, b Board) {
 		}
 	} else {
 		img = p.deathImage
-		frame = 4
+		frame = spriteCount - 1
 	}
 	rect := image.Rect(frame*b.GetGridSize(), 0, (frame+1)*b.GetGridSize(), b.GetGridSize())
 	screen.DrawImage(img.SubImage(rect).(*ebiten.Image), opts)
