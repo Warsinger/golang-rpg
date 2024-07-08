@@ -21,6 +21,7 @@ Attack mosters. Pick up loot. Save the princess?
 * Add weapons and armor
 * Background image
 * Smooth out drawing
+* Cache image loading
 
 ## Screenshots
 ![Early Screenshot](docs/gameplay.png)

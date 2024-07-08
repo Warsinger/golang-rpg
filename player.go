@@ -27,6 +27,8 @@ type PlayerInfo struct {
 	walkImg   *ebiten.Image
 	walkFrame int
 
+	deathImage *ebiten.Image
+
 	animState AnimState
 
 	Character string
@@ -74,7 +76,11 @@ func (p *PlayerInfo) Draw(screen *ebiten.Image, b Board) {
 
 	var c color.Color
 	if p.Alive() {
-		c = color.RGBA{0, 255, 0, 255}
+		if p.CurrentHealth < 25 {
+			c = color.RGBA{255, 255, 0, 255}
+		} else {
+			c = color.RGBA{0, 255, 0, 255}
+		}
 	} else {
 		c = color.RGBA{128, 128, 128, 255}
 	}
@@ -90,12 +96,17 @@ func (p *PlayerInfo) Draw(screen *ebiten.Image, b Board) {
 
 	frame := 0
 	img := p.walkImg
-	switch p.animState {
-	case "walk":
-		frame = p.walkFrame
-	case "attack":
-		frame = p.attackFrame
-		img = p.attackImg
+	if p.Alive() {
+		switch p.animState {
+		case "walk":
+			frame = p.walkFrame
+		case "attack":
+			frame = p.attackFrame
+			img = p.attackImg
+		}
+	} else {
+		img = p.deathImage
+		frame = 4
 	}
 	rect := image.Rect(frame*b.GetGridSize(), 0, (frame+1)*b.GetGridSize(), b.GetGridSize())
 	screen.DrawImage(img.SubImage(rect).(*ebiten.Image), opts)
@@ -191,13 +202,21 @@ func (p *PlayerInfo) GetLevel() int {
 }
 
 func (p *PlayerInfo) LoadImages() error {
+	// TODO cache images
 	path := "assets/characters/" + p.Character + "/" + p.Character + "_"
-	walkImg, _, err := ebitenutil.NewImageFromFile(path + "walk.png")
+	img, _, err := ebitenutil.NewImageFromFile(path + "walk.png")
 	if err != nil {
 		log.Fatalf("failed to load walk sprite sheet: %v", err)
 		return err
 	}
-	p.walkImg = walkImg
+	p.walkImg = img
+
+	img, _, err = ebitenutil.NewImageFromFile(path + "death.png")
+	if err != nil {
+		log.Fatalf("failed to load death image: %v", err)
+		return err
+	}
+	p.deathImage = img
 
 	err = p.LoadAttackImage(path)
 	return err
