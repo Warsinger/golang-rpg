@@ -78,6 +78,10 @@ func (g *GameInfo) Update() error {
 			}
 		}
 	}
+	if inpututil.IsKeyJustPressed(ebiten.KeyF) {
+		// TODO fix focus issue when toggling full screen
+		ebiten.SetFullscreen(!ebiten.IsFullscreen())
+	}
 
 	return nil
 }
@@ -115,10 +119,10 @@ func (g *GameInfo) Draw(screen *ebiten.Image) {
 func (g *GameInfo) drawGrid(screen *ebiten.Image) {
 	size := screen.Bounds().Size()
 
-	for i := 0; i < size.Y; i += g.Board.GetGridSize() {
+	for i := 0; i <= size.Y; i += g.Board.GetGridSize() {
 		vector.StrokeLine(screen, 0, float32(i), float32(size.X), float32(i), 1, color.White, true)
 	}
-	for i := 0; i < size.X; i += g.Board.GetGridSize() {
+	for i := 0; i <= size.X; i += g.Board.GetGridSize() {
 		vector.StrokeLine(screen, float32(i), 0, float32(i), float32(size.Y), 1, color.White, true)
 	}
 }
