@@ -1,11 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 	"math"
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"gopkg.in/yaml.v3"
 )
@@ -68,14 +70,9 @@ func (i *ItemInfo) inRange(e Entity, reach int) bool {
 
 func (t *TreasureInfo) Draw(screen *ebiten.Image, b Board) {
 	drawItem(screen, t, color.RGBA{255, 215, 0, 255}, b)
-
-	// t.DrawInfo(screen, t.TextOffset)
-
 }
 func (h *HealthPackInfo) Draw(screen *ebiten.Image, b Board) {
 	drawItem(screen, h, color.RGBA{100, 255, 100, 255}, b)
-
-	// t.DrawInfo(screen, t.TextOffset)
 }
 
 func drawItem(screen *ebiten.Image, i Item, c color.Color, b Board) {
@@ -83,7 +80,25 @@ func drawItem(screen *ebiten.Image, i Item, c color.Color, b Board) {
 		x, y := b.GridToXY(i.GetGridX(), i.GetGridY())
 		s := float32(i.GetSize() * b.GetGridSize())
 		vector.DrawFilledRect(screen, x, y, s, s, c, true)
+
+		drawInfo(screen, i, x+4, y+12)
 	}
+}
+
+func drawInfo(screen *ebiten.Image, i Item, x, y float32) {
+	var units string
+	switch i.(type) {
+	case *TreasureInfo:
+		units = "g"
+	case *HealthPackInfo:
+		units = "hp"
+	}
+	infoText := fmt.Sprintf("%d %s\n", i.GetValue(), units)
+
+	op := &text.DrawOptions{}
+	op.GeoM.Translate(float64(x), float64(y))
+	op.LineSpacing = mplusNormalFace.Size * 2
+	text.Draw(screen, infoText, mplusNormalFace, op)
 }
 
 func (i *ItemInfo) Select(screen *ebiten.Image, b Board) {

@@ -41,18 +41,13 @@ func (g *GameInfo) Update() error {
 		// Handle input
 		if ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
 			g.Player.Move(Right, g.Board)
-		}
-		if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
+		} else if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
 			g.Player.Move(Left, g.Board)
-		}
-		if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
+		} else if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
 			g.Player.Move(Down, g.Board)
-		}
-		if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
+		} else if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
 			g.Player.Move(Up, g.Board)
-		}
-
-		if inpututil.IsKeyJustPressed(ebiten.KeyA) {
+		} else if ebiten.IsKeyPressed(ebiten.KeyA) {
 			// TODO optimize to look for monsters in reach rather than all monsters
 			for _, m := range g.Monsters {
 				if m.Alive() && inRange(g.Player, m, 1) {
@@ -70,12 +65,14 @@ func (g *GameInfo) Update() error {
 					}
 				}
 			}
+		} else {
+			g.Player.Idle()
 		}
 		if inpututil.IsKeyJustPressed(ebiten.KeyU) {
 			// TODO optimize to look for items in reach rather than all items
 			for _, i := range g.Items {
 				if i.inRange(g.Player, 1) {
-					i.Use(g.Player)
+					g.Player.UseItem(i)
 					g.Board.RemoveObjectFromBoard(i)
 				}
 			}
@@ -91,13 +88,11 @@ func (g *GameInfo) Init() {
 		panic(err)
 	}
 }
-
 func (g *GameInfo) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0, 0, 0, 255}) // Clear screen
 	g.drawGrid(screen)
 
 	b := g.Board
-	g.Player.Draw(screen, b)
 
 	for _, m := range g.Monsters {
 		m.Draw(screen, b)
@@ -112,8 +107,11 @@ func (g *GameInfo) Draw(screen *ebiten.Image) {
 			i.Select(screen, b)
 		}
 	}
+
+	g.Player.Draw(screen, b)
 }
 
+// TODO move into the Board interface
 func (g *GameInfo) drawGrid(screen *ebiten.Image) {
 	size := screen.Bounds().Size()
 

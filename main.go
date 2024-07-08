@@ -9,6 +9,7 @@ import (
 
 func main() {
 	g := &GameInfo{}
+
 	g.Init()
 
 	fmt.Println("Arrow Keys to move")

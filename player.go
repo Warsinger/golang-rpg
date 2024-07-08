@@ -2,20 +2,35 @@ package main
 
 import (
 	"fmt"
+	"image"
 	"image/color"
+	"log"
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"gopkg.in/yaml.v3"
 )
+
+const spriteCount = 6
+
+type AnimState string
 
 type PlayerInfo struct {
 	EntityInfo
 	AttackInfo
 	Experience int
 	Level      int
+
+	walkImg     *ebiten.Image
+	attackImg   *ebiten.Image
+	animState   AnimState
+	walkFrame   int
+	attackFrame int
+
+	Character string
 }
 
 type Player interface {
@@ -30,6 +45,9 @@ type Player interface {
 	AddExperience(xp int)
 	LevelUp(newLevel int)
 	Move(direction Direction, b Board) bool
+	Idle()
+	LoadImages() error
+	UseItem(i Item)
 }
 
 func LoadPlayer(b Board) (Player, error) {
@@ -44,26 +62,55 @@ func LoadPlayer(b Board) (Player, error) {
 	}
 
 	b.AddObjectToBoard(&player)
+
+	err = player.LoadImages()
+	if err != nil {
+		return nil, err
+	}
 	return &player, nil
 }
 
 func (p *PlayerInfo) Draw(screen *ebiten.Image, b Board) {
+	x, y := b.GridToXY(p.GridX, p.GridY)
+
 	var c color.Color
 	if p.Alive() {
 		c = color.RGBA{0, 255, 0, 255}
 	} else {
 		c = color.RGBA{128, 128, 128, 255}
 	}
-	x, y := b.GridToXY(p.GridX, p.GridY)
-	x += float32(b.GetGridSize()*p.Size) / 2
-	y += float32(b.GetGridSize()*p.Size) / 2
+	cx := x + float32(b.GetGridSize()*p.Size)/2
+	cy := y + float32(b.GetGridSize()*p.Size)/2
 	r := float32(p.Size*b.GetGridSize()) / 2
-	vector.DrawFilledCircle(screen, x, y, r, c, true)
+	vector.DrawFilledCircle(screen, cx, cy, r, c, true)
+
+	size := float64(p.GetSize())
+	opts := &ebiten.DrawImageOptions{}
+	opts.GeoM.Translate(float64(x)/size, float64(y)/size)
+	opts.GeoM.Scale(size, size)
+
+	frame := 0
+	img := p.walkImg
+	switch p.animState {
+	case "walk":
+		frame = p.walkFrame
+	case "attack":
+		frame = p.attackFrame
+		img = p.attackImg
+	}
+	rect := image.Rect(frame*b.GetGridSize(), 0, (frame+1)*b.GetGridSize(), b.GetGridSize())
+	screen.DrawImage(img.SubImage(rect).(*ebiten.Image), opts)
+
+	// debug := fmt.Sprintf("frame=%d\nrect=%s\nx,y=%f,%f\ngx,gy=%d,%d\ncx,cy=%f,%f", frame, rect.String(), x, y, p.GridX, p.GridY, cx, cy)
+	// ebitenutil.DebugPrintAt(screen, debug, 400, 10)
+
 	p.DrawInfo(screen, 4, 4)
 }
 
 func (p *PlayerInfo) AttackMonster(m Monster) {
+	p.animState = "attack"
 	p.Attack(m)
+	incrementFrame(&p.attackFrame)
 	if m.Alive() {
 		// if monster is still alive calculate the monster's attack value and subtract from player's health
 		m.Attack(p)
@@ -111,17 +158,56 @@ func (p *PlayerInfo) Move(direction Direction, b Board) bool {
 		gx -= 1
 	}
 
+	p.animState = "walk"
+
 	if b.CanOccupySpace(p, gx, gy) {
+		incrementFrame(&p.walkFrame)
 		p.GridX = gx
 		p.GridY = gy
 		return true
 	}
+
 	return false
+}
+
+func incrementFrame(frame *int) {
+	*frame += 1
+	if *frame >= spriteCount {
+		*frame = 0
+	}
+}
+
+func (p *PlayerInfo) UseItem(i Item) {
+	i.Use(p)
+	p.animState = "attack"
+	incrementFrame(&p.attackFrame)
+}
+
+func (p *PlayerInfo) Idle() {
+	// p.animState = "idle"
 }
 
 func (p *PlayerInfo) GetExperience() int {
 	return p.Experience
 }
+
 func (p *PlayerInfo) GetLevel() int {
 	return p.Level
+}
+
+func (p *PlayerInfo) LoadImages() error {
+	path := "assets/" + p.Character + "/" + p.Character + "_"
+	walkImg, _, err := ebitenutil.NewImageFromFile(path + "walk.png")
+	if err != nil {
+		log.Fatalf("failed to load walk sprite sheet: %v", err)
+		return err
+	}
+	attackImg, _, err := ebitenutil.NewImageFromFile(path + "attack1.png")
+	if err != nil {
+		log.Fatalf("failed to load attack sprite sheet: %v", err)
+		return err
+	}
+	p.walkImg = walkImg
+	p.attackImg = attackImg
+	return nil
 }
