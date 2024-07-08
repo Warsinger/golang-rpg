@@ -28,6 +28,7 @@ func main() {
 	ebiten.SetWindowSize(int(float64(g.Board.GetWidth())/scale), int(float64(g.Board.GetHeight())/scale))
 	ebiten.SetWindowTitle("Basic RPG")
 	ebiten.SetWindowDecorated(false)
+	ebiten.SetTPS(15)
 
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal(err)

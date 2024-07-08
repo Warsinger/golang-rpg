@@ -2,11 +2,14 @@ package main
 
 import (
 	"fmt"
+	"image"
 	"image/color"
+	"log"
 	"math"
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"gopkg.in/yaml.v3"
@@ -16,6 +19,8 @@ type ItemInfo struct {
 	ObjectInfo
 	Value int
 	Used  bool
+
+	img *ebiten.Image
 }
 
 type Item interface {
@@ -23,6 +28,7 @@ type Item interface {
 
 	Draw(screen *ebiten.Image, b Board)
 	Select(screen *ebiten.Image, b Board)
+	GetImage() *ebiten.Image
 
 	GetValue() int
 	GetUsed() bool
@@ -81,7 +87,17 @@ func drawItem(screen *ebiten.Image, i Item, c color.Color, b Board) {
 		s := float32(i.GetSize() * b.GetGridSize())
 		vector.DrawFilledRect(screen, x, y, s, s, c, true)
 
-		drawInfo(screen, i, x+4, y+12)
+		size := float64(i.GetSize())
+		opts := &ebiten.DrawImageOptions{}
+		opts.GeoM.Translate(float64(x)/size, float64(y)/size)
+		opts.GeoM.Scale(size, size)
+
+		img := i.GetImage()
+		rect := image.Rect(0, 0, b.GetGridSize(), b.GetGridSize())
+
+		screen.DrawImage(img.SubImage(rect).(*ebiten.Image), opts)
+
+		drawInfo(screen, i, x+4, y-10)
 	}
 }
 
@@ -101,6 +117,10 @@ func drawInfo(screen *ebiten.Image, i Item, x, y float32) {
 	text.Draw(screen, infoText, mplusNormalFace, op)
 }
 
+func (i *ItemInfo) GetImage() *ebiten.Image {
+	return i.img
+}
+
 func (i *ItemInfo) Select(screen *ebiten.Image, b Board) {
 	if !i.Used {
 		x, y := b.GridToXY(i.GridX, i.GridY)
@@ -109,35 +129,69 @@ func (i *ItemInfo) Select(screen *ebiten.Image, b Board) {
 	}
 }
 
-func LoadTreasures(b Board) ([]TreasureInfo, error) {
+func NewTreasure(b Board, gold, x, y, size int) *TreasureInfo {
+	t := &TreasureInfo{ItemInfo: ItemInfo{Value: gold, ObjectInfo: ObjectInfo{x, y, size}}}
+	b.AddObjectToBoard(t)
+
+	err := t.LoadImages("chest")
+	if err != nil {
+		panic(err)
+	}
+
+	return t
+}
+
+func LoadTreasures(b Board) ([]*TreasureInfo, error) {
 	yamlFile, err := os.ReadFile("config/treasures.yml")
 	if err != nil {
 		return nil, err
 	}
-	var treasures []TreasureInfo
+	var treasures []*TreasureInfo
 	err = yaml.Unmarshal(yamlFile, &treasures)
 	if err != nil {
 		return nil, err
 	}
 	for _, t := range treasures {
-		b.AddObjectToBoard(&t)
+		b.AddObjectToBoard(t)
+
+		err = t.LoadImages("chest")
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return treasures, nil
 }
 
-func LoadHealthPacks(b Board) ([]HealthPackInfo, error) {
+func LoadHealthPacks(b Board) ([]*HealthPackInfo, error) {
 	yamlFile, err := os.ReadFile("config/healthpacks.yml")
 	if err != nil {
 		return nil, err
 	}
-	var healthPacks []HealthPackInfo
+	var healthPacks []*HealthPackInfo
 	err = yaml.Unmarshal(yamlFile, &healthPacks)
 	if err != nil {
 		return nil, err
 	}
 	for _, h := range healthPacks {
-		b.AddObjectToBoard(&h)
+		b.AddObjectToBoard(h)
+
+		err = h.LoadImages("heart")
+		if err != nil {
+			return nil, err
+		}
 	}
 	return healthPacks, nil
+}
+
+func (i *ItemInfo) LoadImages(name string) error {
+	img, _, err := ebitenutil.NewImageFromFile(fmt.Sprintf("assets/items/%s.png", name))
+	if err != nil {
+		log.Fatalf("failed to load item image %s: %v", name, err)
+		return err
+	}
+	i.img = img
+
+	return err
+
 }

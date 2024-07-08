@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"math"
 	"math/rand/v2"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
@@ -45,6 +47,9 @@ type Entity interface {
 }
 type AttackInfo struct {
 	AttackPower int
+
+	attackImg   *ebiten.Image
+	attackFrame int
 }
 type Attacker interface {
 	GetAttackPower() int
@@ -123,4 +128,19 @@ func (a *AttackInfo) Attack(d Entity) {
 	// calculate the attackers's attack value and subtract from defender's health
 	pAttack := int(math.Max(float64(rand.IntN(a.AttackPower+1)-d.GetDefense()), 0))
 	d.SetCurrentHealth(int(math.Max(float64(d.GetCurrentHealth()-pAttack), 0)))
+
+	incrementFrame(&a.attackFrame)
+}
+
+func (a *AttackInfo) LoadAttackImage(path string) error {
+	// TODO make a cache of image files for the different monsters
+
+	attackImg, _, err := ebitenutil.NewImageFromFile(path + "attack1.png")
+	if err != nil {
+		log.Fatalf("failed to load attack sprite sheet: %v", err)
+		return err
+	}
+
+	a.attackImg = attackImg
+	return nil
 }

@@ -56,9 +56,8 @@ func (g *GameInfo) Update() error {
 						// remove from the board
 						g.Board.RemoveObjectFromBoard(m)
 						// if moster dies, drop some treasure
-						loot := m.Loot()
+						loot := m.Loot(g.Board)
 						g.Items = append(g.Items, loot)
-						g.Board.AddObjectToBoard(loot)
 
 						// get some experience
 						g.Player.AddExperience(m.GetExperienceValue())
@@ -160,33 +159,33 @@ func (g *GameInfo) Load() error {
 		return err
 	}
 
-	var treasures []TreasureInfo
+	var treasures []*TreasureInfo
 	treasures, err = LoadTreasures(g.Board)
 	if err != nil {
 		return err
 	}
 	for _, t := range treasures {
-		g.Items = append(g.Items, &t)
+		g.Items = append(g.Items, t)
 	}
 
-	var healthPacks []HealthPackInfo
+	var healthPacks []*HealthPackInfo
 	healthPacks, err = LoadHealthPacks(g.Board)
 	if err != nil {
 		return err
 	}
 
 	for _, h := range healthPacks {
-		g.Items = append(g.Items, &h)
+		g.Items = append(g.Items, h)
 	}
 
-	var monsters []MonsterInfo
+	var monsters []*MonsterInfo
 	monsters, err = LoadMonsters(g.Board)
 	if err != nil {
 		return err
 	}
 
 	for _, m := range monsters {
-		g.Monsters = append(g.Monsters, &m)
+		g.Monsters = append(g.Monsters, m)
 	}
 
 	return nil

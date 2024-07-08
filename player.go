@@ -24,11 +24,10 @@ type PlayerInfo struct {
 	Experience int
 	Level      int
 
-	walkImg     *ebiten.Image
-	attackImg   *ebiten.Image
-	animState   AnimState
-	walkFrame   int
-	attackFrame int
+	walkImg   *ebiten.Image
+	walkFrame int
+
+	animState AnimState
 
 	Character string
 }
@@ -110,7 +109,7 @@ func (p *PlayerInfo) Draw(screen *ebiten.Image, b Board) {
 func (p *PlayerInfo) AttackMonster(m Monster) {
 	p.animState = "attack"
 	p.Attack(m)
-	incrementFrame(&p.attackFrame)
+
 	if m.Alive() {
 		// if monster is still alive calculate the monster's attack value and subtract from player's health
 		m.Attack(p)
@@ -161,20 +160,16 @@ func (p *PlayerInfo) Move(direction Direction, b Board) bool {
 	p.animState = "walk"
 
 	if b.CanOccupySpace(p, gx, gy) {
-		incrementFrame(&p.walkFrame)
+		b.RemoveObjectFromBoard(p)
 		p.GridX = gx
 		p.GridY = gy
+		b.AddObjectToBoard(p)
+
+		incrementFrame(&p.walkFrame)
 		return true
 	}
 
 	return false
-}
-
-func incrementFrame(frame *int) {
-	*frame += 1
-	if *frame >= spriteCount {
-		*frame = 0
-	}
 }
 
 func (p *PlayerInfo) UseItem(i Item) {
@@ -196,18 +191,15 @@ func (p *PlayerInfo) GetLevel() int {
 }
 
 func (p *PlayerInfo) LoadImages() error {
-	path := "assets/" + p.Character + "/" + p.Character + "_"
+	path := "assets/characters/" + p.Character + "/" + p.Character + "_"
 	walkImg, _, err := ebitenutil.NewImageFromFile(path + "walk.png")
 	if err != nil {
 		log.Fatalf("failed to load walk sprite sheet: %v", err)
 		return err
 	}
-	attackImg, _, err := ebitenutil.NewImageFromFile(path + "attack1.png")
-	if err != nil {
-		log.Fatalf("failed to load attack sprite sheet: %v", err)
-		return err
-	}
 	p.walkImg = walkImg
-	p.attackImg = attackImg
-	return nil
+
+	err = p.LoadAttackImage(path)
+	return err
+
 }

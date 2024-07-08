@@ -30,6 +30,13 @@ func maxXY(o Object) (float64, float64) {
 	return float64(o.GetGridX() + o.GetSize() - 1), float64(o.GetGridY() + o.GetSize() - 1)
 }
 
+func incrementFrame(frame *int) {
+	*frame += 1
+	if *frame >= spriteCount {
+		*frame = 0
+	}
+}
+
 type Direction int
 
 const (
