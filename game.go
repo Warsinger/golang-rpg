@@ -6,7 +6,6 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
-	"github.com/hajimehoshi/ebiten/v2/vector"
 	"gopkg.in/yaml.v3"
 )
 
@@ -93,9 +92,9 @@ func (g *GameInfo) Init() {
 }
 func (g *GameInfo) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0, 0, 0, 255}) // Clear screen
-	g.drawGrid(screen)
 
 	b := g.Board
+	b.Draw(screen)
 
 	for _, m := range g.Monsters {
 		m.Draw(screen, b)
@@ -112,18 +111,6 @@ func (g *GameInfo) Draw(screen *ebiten.Image) {
 	}
 
 	g.Player.Draw(screen, b)
-}
-
-// TODO move into the Board interface
-func (g *GameInfo) drawGrid(screen *ebiten.Image) {
-	size := screen.Bounds().Size()
-
-	for i := 0; i <= size.Y; i += g.Board.GetGridSize() {
-		vector.StrokeLine(screen, 0, float32(i), float32(size.X), float32(i), 1, color.White, true)
-	}
-	for i := 0; i <= size.X; i += g.Board.GetGridSize() {
-		vector.StrokeLine(screen, float32(i), 0, float32(i), float32(size.Y), 1, color.White, true)
-	}
 }
 
 func (g *GameInfo) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -153,7 +140,7 @@ func (g *GameInfo) Load() error {
 		return err
 	}
 
-	g.Board, err = LoadBoard()
+	g.Board, err = LoadBoard(g.AssetManager)
 	if err != nil {
 		return err
 	}

@@ -68,3 +68,13 @@
   size: 48
   type: item
   framecount: 1
+- name: Swamp
+  filepath: Swamp.png
+  size: 32
+  type: tile
+  framecount: 1
+- name: StoneField
+  filepath: StoneField.png
+  size: 32
+  type: tile
+  framecount: 1

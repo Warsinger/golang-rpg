@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 
+	"github.com/hajimehoshi/ebiten/v2"
 	"gopkg.in/yaml.v3"
 )
 
@@ -10,7 +11,9 @@ type BoardInfo struct {
 	GridWidth  int
 	GridHeight int
 	GridSize   int
+	TileSet    string
 	occupied   []Object
+	boardAsset Asset
 }
 
 type Board interface {
@@ -25,9 +28,10 @@ type Board interface {
 	UpdateBoardForObject(o Object, occupy bool)
 	CanOccupySpace(o Object, gx, gy int) bool
 	GridToIndex(x, y int) int
+	Draw(screen *ebiten.Image)
 }
 
-func LoadBoard() (Board, error) {
+func LoadBoard(am AssetManager) (Board, error) {
 	yamlFile, err := os.ReadFile("config/board.yml")
 	if err != nil {
 		return nil, err
@@ -38,8 +42,33 @@ func LoadBoard() (Board, error) {
 		return nil, err
 	}
 	board.occupied = make([]Object, board.GridWidth*board.GridHeight)
+	board.LoadImages(am)
 
 	return &board, nil
+}
+
+func (b *BoardInfo) LoadImages(am AssetManager) {
+	b.boardAsset = am.GetAssetInfo(b.TileSet, "tile")
+}
+
+func (b *BoardInfo) Draw(screen *ebiten.Image) {
+	size := screen.Bounds().Size()
+
+	for i := 0; i <= size.Y; i += b.GetGridSize() {
+		// vector.StrokeLine(screen, 0, float32(i), float32(size.X), float32(i), 1, color.White, true)
+
+		tileScale := float64(b.GetGridSize()) / float64(b.boardAsset.GetSize())
+		for j := 0; j < size.X; j += b.GetGridSize() {
+			opts := &ebiten.DrawImageOptions{}
+			opts.GeoM.Translate(float64(j)/tileScale, float64(i)/tileScale)
+			opts.GeoM.Scale(tileScale, tileScale)
+
+			screen.DrawImage(b.boardAsset.GetImage(), opts)
+		}
+	}
+	// for i := 0; i <= size.X; i += b.GetGridSize() {
+	// 	vector.StrokeLine(screen, float32(i), 0, float32(i), float32(size.Y), 1, color.White, true)
+	// }
 }
 
 func (b *BoardInfo) GridToXY(gridX, gridY int) (float32, float32) {

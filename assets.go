@@ -43,18 +43,7 @@ func (am *AssetManagerInfo) GetAssetInfo(name string, assetType AssetType) Asset
 func LoadAssets() (AssetManager, error) {
 	am := &AssetManagerInfo{}
 
-	// as := []*AssetInfo{{Name: "bob", FrameCount: 1, Size: 44}, {Name: "bobie", FrameCount: 2, Size: 34}}
-	// data, err := yaml.Marshal(as)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// err = os.WriteFile("game_assets.yml", data, 0644)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
 	yamlFile, err := os.ReadFile("config/assets.yml")
-	// fmt.Println(string(yamlFile))
 	if err != nil {
 		return nil, err
 	}
@@ -86,6 +75,8 @@ func loadImageAsset(a *AssetInfo) error {
 		typePath = fmt.Sprintf("characters/%s", a.Name)
 	case "item":
 		typePath = "items"
+	case "tile":
+		typePath = "tiles"
 	}
 
 	filepath := fmt.Sprintf("assets/%s/%s", typePath, a.FilePath)
