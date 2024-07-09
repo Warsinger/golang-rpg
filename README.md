@@ -15,14 +15,14 @@ Attack mosters. Pick up loot. Save the princess?
 * Map
 * Monster movement
 * Attacker face defender
-* Vary monster images
+* ~~Vary monster images~~
 * Spawning monsters
 * Randomize damage
 * Add weapons and armor
 * Background image
-* Smooth out drawing
+* Smooth out drawing during movement
 * Cache image loading
-* Support variable sprite frame count
+* ~~Support variable sprite frame count~~
 
 ## Screenshots
 ![Early Screenshot](docs/gameplay.png)

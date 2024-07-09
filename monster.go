@@ -4,6 +4,7 @@ import (
 	"image"
 	"image/color"
 	"os"
+	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
@@ -77,5 +78,11 @@ func LoadMonsters(b Board, am AssetManager) ([]*MonsterInfo, error) {
 }
 
 func (m *MonsterInfo) LoadImages(am AssetManager) {
-	m.LoadAttackImage(am, "SteamMan")
+	var monsterIcon string
+	if strings.HasPrefix(m.Name, "Barbol") {
+		monsterIcon = "SteamMan"
+	} else {
+		monsterIcon = "GraveRobber"
+	}
+	m.LoadAttackImage(am, monsterIcon)
 }

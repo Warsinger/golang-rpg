@@ -43,6 +43,21 @@
   size: 48
   type: death
   framecount: 6
+- name: GraveRobber
+  filepath: walk.png
+  size: 48
+  type: walk
+  framecount: 6
+- name: GraveRobber
+  filepath: attack.png
+  size: 48
+  type: attack
+  framecount: 6
+- name: GraveRobber
+  filepath: death.png
+  size: 48
+  type: death
+  framecount: 6
 - name: Treasure
   filepath: chest.png
   size: 48
