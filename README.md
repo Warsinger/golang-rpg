@@ -24,6 +24,7 @@ Attack mosters. Pick up loot. Save the princess?
 * Smooth out drawing during movement
 * Cache image loading
 * ~~Support variable sprite frame count~~
+* Add unit tests
 
 ## Screenshots
 ![Early Screenshot](docs/gameplay.png)

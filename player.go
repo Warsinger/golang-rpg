@@ -19,6 +19,7 @@ type PlayerInfo struct {
 	AttackInfo
 	Experience int
 	Level      int
+	Character  string
 
 	walkAsset Asset
 	walkFrame int
@@ -26,8 +27,7 @@ type PlayerInfo struct {
 	deathAsset Asset
 
 	animState AnimState
-
-	Character string
+	moveQueue *Queue[image.Point]
 }
 
 type Player interface {
@@ -42,6 +42,8 @@ type Player interface {
 	AddExperience(xp int)
 	LevelUp(newLevel int)
 	Move(direction Direction, b Board) bool
+	EnqueueMove(pt *image.Point)
+	DequeueMove() *image.Point
 	Idle()
 	LoadImages(am AssetManager)
 	UseItem(i Item)
@@ -61,12 +63,21 @@ func LoadPlayer(b Board, am AssetManager) (Player, error) {
 	b.AddObjectToBoard(&player)
 
 	player.LoadImages(am)
+	player.moveQueue = NewQueue[image.Point]()
 
 	return &player, nil
 }
 
 func (p *PlayerInfo) Draw(screen *ebiten.Image, b Board) {
-	x, y := b.GridToXY(p.GridX, p.GridY)
+	pt := p.DequeueMove()
+	var x, y float32
+	incFrame := false
+	if pt != nil {
+		x, y = float32(pt.X), float32(pt.Y)
+		incFrame = true
+	} else {
+		x, y = b.GridToXY(p.GridX, p.GridY)
+	}
 
 	var c color.Color
 	if p.Alive() {
@@ -93,6 +104,9 @@ func (p *PlayerInfo) Draw(screen *ebiten.Image, b Board) {
 	if p.Alive() {
 		switch p.animState {
 		case "walk":
+			if incFrame {
+				incrementFrame(&p.walkFrame, p.walkAsset)
+			}
 			frame = p.walkFrame
 		case "attack":
 			frame = p.attackFrame
@@ -165,6 +179,9 @@ func (p *PlayerInfo) Move(direction Direction, b Board) bool {
 	p.animState = "walk"
 
 	if b.CanOccupySpace(p, gx, gy) {
+		// queue up several coordinates between old and new to draw intermeiate frames
+		p.queuePoints(p.GridX, p.GridY, gx, gy, b)
+
 		b.RemoveObjectFromBoard(p)
 		p.GridX = gx
 		p.GridY = gy
@@ -175,6 +192,25 @@ func (p *PlayerInfo) Move(direction Direction, b Board) bool {
 	}
 
 	return false
+}
+
+func (p *PlayerInfo) queuePoints(gx1, gy1, gx2, gy2 int, b Board) {
+	const stepsPerFrame = 4
+	x1, y1 := b.GridToXY(gx1, gy1)
+	x2, y2 := b.GridToXY(gx2, gy2)
+	stepSize := b.GetGridSize() / stepsPerFrame
+	var pt image.Point
+	if gx1 != gx2 {
+		for i := int(x1); i < int(x2); i += stepSize {
+			pt = image.Pt(i, int(y1))
+			p.EnqueueMove(&pt)
+		}
+	} else if gy1 != gy2 {
+		for i := int(y1); i < int(y2); i += stepSize {
+			pt = image.Pt(int(x1), i)
+			p.EnqueueMove(&pt)
+		}
+	}
 }
 
 func (p *PlayerInfo) UseItem(i Item) {
@@ -200,4 +236,15 @@ func (p *PlayerInfo) LoadImages(am AssetManager) {
 	p.deathAsset = am.GetAssetInfo(p.Character, "death")
 
 	p.LoadAttackImage(am, p.Character)
+}
+func (p *PlayerInfo) EnqueueMove(pt *image.Point) {
+	p.moveQueue.Enqueue(*pt)
+}
+func (p *PlayerInfo) DequeueMove() *image.Point {
+	pt, success := p.moveQueue.TryDequeue()
+	if success {
+		return &pt
+	}
+
+	return nil
 }
