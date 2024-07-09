@@ -65,7 +65,6 @@ func LoadAssets() (AssetManager, error) {
 	}
 	am.assets = make(map[string]map[AssetType]Asset)
 	for _, a := range assets {
-		fmt.Printf("asset info: %v\n", a)
 		if am.assets[a.Name] == nil {
 			am.assets[a.Name] = make(map[AssetType]Asset)
 

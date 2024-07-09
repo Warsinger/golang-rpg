@@ -164,6 +164,11 @@ func (p *PlayerInfo) DrawInfo(screen *ebiten.Image, x, y float32) {
 }
 
 func (p *PlayerInfo) Move(direction Direction, b Board) bool {
+	// don't move if we're already moving to let the queue drain
+	if p.moveQueue.Size() > 0 {
+		return false
+	}
+
 	gx, gy := p.GridX, p.GridY
 	switch direction {
 	case Up:
@@ -195,7 +200,7 @@ func (p *PlayerInfo) Move(direction Direction, b Board) bool {
 }
 
 func (p *PlayerInfo) queuePoints(gx1, gy1, gx2, gy2 int, b Board) {
-	const stepsPerFrame = 4
+	const stepsPerFrame = 12
 	x1, y1 := b.GridToXY(gx1, gy1)
 	x2, y2 := b.GridToXY(gx2, gy2)
 	stepSize := b.GetGridSize() / stepsPerFrame
