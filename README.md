@@ -28,4 +28,4 @@ Attack mosters. Pick up loot. Save the princess?
 
 ## Screenshots
 ![Early Screenshot](docs/gameplay.png)
-![Now with images Screenshot](docs/gameplay2.png)
+![Background images Screenshot](docs/gameplay_bg.png)
