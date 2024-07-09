@@ -127,7 +127,7 @@ func (a *AttackInfo) Attack(d Entity) {
 	pAttack := int(math.Max(float64(rand.IntN(a.AttackPower+1)-d.GetDefense()), 0))
 	d.SetCurrentHealth(int(math.Max(float64(d.GetCurrentHealth()-pAttack), 0)))
 
-	incrementFrame(&a.attackFrame)
+	incrementFrame(&a.attackFrame, a.attackAsset)
 }
 
 func (a *AttackInfo) LoadAttackImage(am AssetManager, name string) {

@@ -13,10 +13,35 @@
   size: 48
   type: death
   framecount: 4
+- name: Woodcutter
+  filepath: walk.png
+  size: 48
+  type: walk
+  framecount: 6
+- name: Woodcutter
+  filepath: attack.png
+  size: 48
+  type: attack
+  framecount: 6
+- name: Woodcutter
+  filepath: death.png
+  size: 48
+  type: death
+  framecount: 6
+- name: SteamMan
+  filepath: walk.png
+  size: 48
+  type: walk
+  framecount: 6
 - name: SteamMan
   filepath: attack.png
   size: 48
   type: attack
+  framecount: 6
+- name: SteamMan
+  filepath: death.png
+  size: 48
+  type: death
   framecount: 6
 - name: Treasure
   filepath: chest.png

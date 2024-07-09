@@ -12,8 +12,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const spriteCount = 4
-
 type AnimState string
 
 type PlayerInfo struct {
@@ -102,7 +100,7 @@ func (p *PlayerInfo) Draw(screen *ebiten.Image, b Board) {
 		}
 	} else {
 		img = p.deathAsset.GetImage()
-		frame = spriteCount - 1
+		frame = p.deathAsset.GetFrameCount() - 1
 	}
 	rect := image.Rect(frame*b.GetGridSize(), 0, (frame+1)*b.GetGridSize(), b.GetGridSize())
 	screen.DrawImage(img.SubImage(rect).(*ebiten.Image), opts)
@@ -172,7 +170,7 @@ func (p *PlayerInfo) Move(direction Direction, b Board) bool {
 		p.GridY = gy
 		b.AddObjectToBoard(p)
 
-		incrementFrame(&p.walkFrame)
+		incrementFrame(&p.walkFrame, p.walkAsset)
 		return true
 	}
 
@@ -182,7 +180,7 @@ func (p *PlayerInfo) Move(direction Direction, b Board) bool {
 func (p *PlayerInfo) UseItem(i Item) {
 	i.Use(p)
 	p.animState = "attack"
-	incrementFrame(&p.attackFrame)
+	incrementFrame(&p.attackFrame, p.attackAsset)
 }
 
 func (p *PlayerInfo) Idle() {
