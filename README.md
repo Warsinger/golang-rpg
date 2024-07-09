@@ -16,6 +16,7 @@ Attack mosters. Pick up loot. Save the princess?
 * Monster movement
 * Attacker face defender
 * ~~Vary monster images~~
+* Add real monster images
 * Spawning monsters
 * Randomize damage
 * Add weapons and armor
