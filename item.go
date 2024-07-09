@@ -4,12 +4,10 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"log"
 	"math"
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"gopkg.in/yaml.v3"
@@ -20,7 +18,7 @@ type ItemInfo struct {
 	Value int
 	Used  bool
 
-	img *ebiten.Image
+	asset Asset
 }
 
 type Item interface {
@@ -28,7 +26,7 @@ type Item interface {
 
 	Draw(screen *ebiten.Image, b Board)
 	Select(screen *ebiten.Image, b Board)
-	GetImage() *ebiten.Image
+	GetAsset() Asset
 
 	GetValue() int
 	GetUsed() bool
@@ -92,7 +90,7 @@ func drawItem(screen *ebiten.Image, i Item, c color.Color, b Board) {
 		opts.GeoM.Translate(float64(x)/size, float64(y)/size)
 		opts.GeoM.Scale(size, size)
 
-		img := i.GetImage()
+		img := i.GetAsset().GetImage()
 		rect := image.Rect(0, 0, b.GetGridSize(), b.GetGridSize())
 
 		screen.DrawImage(img.SubImage(rect).(*ebiten.Image), opts)
@@ -117,8 +115,8 @@ func drawInfo(screen *ebiten.Image, i Item, x, y float32) {
 	text.Draw(screen, infoText, mplusNormalFace, op)
 }
 
-func (i *ItemInfo) GetImage() *ebiten.Image {
-	return i.img
+func (i *ItemInfo) GetAsset() Asset {
+	return i.asset
 }
 
 func (i *ItemInfo) Select(screen *ebiten.Image, b Board) {
@@ -129,19 +127,16 @@ func (i *ItemInfo) Select(screen *ebiten.Image, b Board) {
 	}
 }
 
-func NewTreasure(b Board, gold, x, y, size int) *TreasureInfo {
+func NewTreasure(b Board, am AssetManager, gold, x, y, size int) *TreasureInfo {
 	t := &TreasureInfo{ItemInfo: ItemInfo{Value: gold, ObjectInfo: ObjectInfo{x, y, size}}}
 	b.AddObjectToBoard(t)
 
-	err := t.LoadImages("chest")
-	if err != nil {
-		panic(err)
-	}
+	t.LoadImages(am, "Treasure")
 
 	return t
 }
 
-func LoadTreasures(b Board) ([]*TreasureInfo, error) {
+func LoadTreasures(b Board, am AssetManager) ([]*TreasureInfo, error) {
 	yamlFile, err := os.ReadFile("config/treasures.yml")
 	if err != nil {
 		return nil, err
@@ -154,16 +149,13 @@ func LoadTreasures(b Board) ([]*TreasureInfo, error) {
 	for _, t := range treasures {
 		b.AddObjectToBoard(t)
 
-		err = t.LoadImages("chest")
-		if err != nil {
-			return nil, err
-		}
+		t.LoadImages(am, "Treasure")
 	}
 
 	return treasures, nil
 }
 
-func LoadHealthPacks(b Board) ([]*HealthPackInfo, error) {
+func LoadHealthPacks(b Board, am AssetManager) ([]*HealthPackInfo, error) {
 	yamlFile, err := os.ReadFile("config/healthpacks.yml")
 	if err != nil {
 		return nil, err
@@ -176,22 +168,11 @@ func LoadHealthPacks(b Board) ([]*HealthPackInfo, error) {
 	for _, h := range healthPacks {
 		b.AddObjectToBoard(h)
 
-		err = h.LoadImages("heart")
-		if err != nil {
-			return nil, err
-		}
+		h.LoadImages(am, "HealthPack")
 	}
 	return healthPacks, nil
 }
 
-func (i *ItemInfo) LoadImages(name string) error {
-	img, _, err := ebitenutil.NewImageFromFile(fmt.Sprintf("assets/items/%s.png", name))
-	if err != nil {
-		log.Fatalf("failed to load item image %s: %v", name, err)
-		return err
-	}
-	i.img = img
-
-	return err
-
+func (i *ItemInfo) LoadImages(am AssetManager, name string) {
+	i.asset = am.GetAssetInfo(name, "item")
 }

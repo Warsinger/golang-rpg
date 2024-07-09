@@ -4,11 +4,9 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"log"
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"gopkg.in/yaml.v3"
@@ -24,10 +22,10 @@ type PlayerInfo struct {
 	Experience int
 	Level      int
 
-	walkImg   *ebiten.Image
+	walkAsset Asset
 	walkFrame int
 
-	deathImage *ebiten.Image
+	deathAsset Asset
 
 	animState AnimState
 
@@ -47,11 +45,11 @@ type Player interface {
 	LevelUp(newLevel int)
 	Move(direction Direction, b Board) bool
 	Idle()
-	LoadImages() error
+	LoadImages(am AssetManager)
 	UseItem(i Item)
 }
 
-func LoadPlayer(b Board) (Player, error) {
+func LoadPlayer(b Board, am AssetManager) (Player, error) {
 	yamlFile, err := os.ReadFile("config/player.yml")
 	if err != nil {
 		return nil, err
@@ -64,10 +62,8 @@ func LoadPlayer(b Board) (Player, error) {
 
 	b.AddObjectToBoard(&player)
 
-	err = player.LoadImages()
-	if err != nil {
-		return nil, err
-	}
+	player.LoadImages(am)
+
 	return &player, nil
 }
 
@@ -95,17 +91,17 @@ func (p *PlayerInfo) Draw(screen *ebiten.Image, b Board) {
 	opts.GeoM.Scale(size, size)
 
 	frame := 0
-	img := p.walkImg
+	img := p.walkAsset.GetImage()
 	if p.Alive() {
 		switch p.animState {
 		case "walk":
 			frame = p.walkFrame
 		case "attack":
 			frame = p.attackFrame
-			img = p.attackImg
+			img = p.attackAsset.GetImage()
 		}
 	} else {
-		img = p.deathImage
+		img = p.deathAsset.GetImage()
 		frame = spriteCount - 1
 	}
 	rect := image.Rect(frame*b.GetGridSize(), 0, (frame+1)*b.GetGridSize(), b.GetGridSize())
@@ -201,24 +197,9 @@ func (p *PlayerInfo) GetLevel() int {
 	return p.Level
 }
 
-func (p *PlayerInfo) LoadImages() error {
-	// TODO cache images
-	path := "assets/characters/" + p.Character + "/" + p.Character + "_"
-	img, _, err := ebitenutil.NewImageFromFile(path + "walk.png")
-	if err != nil {
-		log.Fatalf("failed to load walk sprite sheet: %v", err)
-		return err
-	}
-	p.walkImg = img
+func (p *PlayerInfo) LoadImages(am AssetManager) {
+	p.walkAsset = am.GetAssetInfo(p.Character, "walk")
+	p.deathAsset = am.GetAssetInfo(p.Character, "death")
 
-	img, _, err = ebitenutil.NewImageFromFile(path + "death.png")
-	if err != nil {
-		log.Fatalf("failed to load death image: %v", err)
-		return err
-	}
-	p.deathImage = img
-
-	err = p.LoadAttackImage(path)
-	return err
-
+	p.LoadAttackImage(am, p.Character)
 }

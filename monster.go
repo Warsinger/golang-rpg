@@ -20,7 +20,7 @@ type Monster interface {
 
 	Draw(screen *ebiten.Image, b Board)
 	Select(screen *ebiten.Image, b Board)
-	Loot(b Board) Item
+	Loot(b Board, am AssetManager) Item
 }
 
 func (m *MonsterInfo) Draw(screen *ebiten.Image, b Board) {
@@ -35,7 +35,7 @@ func (m *MonsterInfo) Draw(screen *ebiten.Image, b Board) {
 		opts.GeoM.Scale(size, size)
 
 		frame := m.attackFrame
-		img := m.attackImg
+		img := m.attackAsset.GetImage()
 		rect := image.Rect(frame*b.GetGridSize(), 0, (frame+1)*b.GetGridSize(), b.GetGridSize())
 
 		screen.DrawImage(img.SubImage(rect).(*ebiten.Image), opts)
@@ -51,11 +51,11 @@ func (m *MonsterInfo) Select(screen *ebiten.Image, b Board) {
 	}
 }
 
-func (m *MonsterInfo) Loot(b Board) Item {
-	return NewTreasure(b, m.Gold, m.GridX, m.GridY, m.Size)
+func (m *MonsterInfo) Loot(b Board, am AssetManager) Item {
+	return NewTreasure(b, am, m.Gold, m.GridX, m.GridY, m.Size)
 }
 
-func LoadMonsters(b Board) ([]*MonsterInfo, error) {
+func LoadMonsters(b Board, am AssetManager) ([]*MonsterInfo, error) {
 	yamlFile, err := os.ReadFile("config/monsters.yml")
 	if err != nil {
 		return nil, err
@@ -70,18 +70,12 @@ func LoadMonsters(b Board) ([]*MonsterInfo, error) {
 	for _, m := range monsters {
 		b.AddObjectToBoard(m)
 
-		err = m.LoadImages()
-		if err != nil {
-			return nil, err
-		}
+		m.LoadImages(am)
 	}
 
 	return monsters, nil
 }
 
-func (m *MonsterInfo) LoadImages() error {
-	path := "assets/characters/GraveRobber/GraveRobber_"
-
-	err := m.LoadAttackImage(path)
-	return err
+func (m *MonsterInfo) LoadImages(am AssetManager) {
+	m.LoadAttackImage(am, "SteamMan")
 }

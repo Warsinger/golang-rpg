@@ -11,10 +11,11 @@ import (
 )
 
 type GameInfo struct {
-	Board    Board
-	Player   Player
-	Monsters []Monster
-	Items    []Item
+	Board        Board
+	Player       Player
+	Monsters     []Monster
+	Items        []Item
+	AssetManager AssetManager
 }
 
 type Game interface {
@@ -22,8 +23,7 @@ type Game interface {
 	GetPlayer() Player
 	GetMonsters() []Monster
 	GetItems() []Item
-	GetEntities() []Entity
-	GetObjects() []Object
+	GetAssetManager() AssetManager
 	Init()
 	Load() error
 	Save() error
@@ -56,7 +56,7 @@ func (g *GameInfo) Update() error {
 						// remove from the board
 						g.Board.RemoveObjectFromBoard(m)
 						// if moster dies, drop some treasure
-						loot := m.Loot(g.Board)
+						loot := m.Loot(g.Board, g.AssetManager)
 						g.Items = append(g.Items, loot)
 
 						// get some experience
@@ -148,19 +148,24 @@ func (g *GameInfo) Load() error {
 	g.Player = nil
 
 	var err error
+	g.AssetManager, err = LoadAssets()
+	if err != nil {
+		return err
+	}
+
 	g.Board, err = LoadBoard()
 	if err != nil {
 		return err
 	}
 	// TODO when loading assets make sure they don't collide on the board
 
-	g.Player, err = LoadPlayer(g.Board)
+	g.Player, err = LoadPlayer(g.Board, g.AssetManager)
 	if err != nil {
 		return err
 	}
 
 	var treasures []*TreasureInfo
-	treasures, err = LoadTreasures(g.Board)
+	treasures, err = LoadTreasures(g.Board, g.AssetManager)
 	if err != nil {
 		return err
 	}
@@ -169,7 +174,7 @@ func (g *GameInfo) Load() error {
 	}
 
 	var healthPacks []*HealthPackInfo
-	healthPacks, err = LoadHealthPacks(g.Board)
+	healthPacks, err = LoadHealthPacks(g.Board, g.AssetManager)
 	if err != nil {
 		return err
 	}
@@ -179,7 +184,7 @@ func (g *GameInfo) Load() error {
 	}
 
 	var monsters []*MonsterInfo
-	monsters, err = LoadMonsters(g.Board)
+	monsters, err = LoadMonsters(g.Board, g.AssetManager)
 	if err != nil {
 		return err
 	}
@@ -205,12 +210,4 @@ func (g *GameInfo) GetMonsters() []Monster {
 
 func (g *GameInfo) GetItems() []Item {
 	return g.Items
-}
-
-func (g *GameInfo) GetEntities() []Entity {
-	panic("not implemented")
-}
-
-func (g *GameInfo) GetObjects() []Object {
-	panic("not implemented")
 }
