@@ -165,7 +165,7 @@ func (p *PlayerInfo) DrawInfo(screen *ebiten.Image, x, y float32) {
 
 func (p *PlayerInfo) Move(direction Direction, b Board) bool {
 	// don't move if we're already moving to let the queue drain
-	if p.moveQueue.Size() > 0 {
+	if !p.moveQueue.IsEmpty() {
 		return false
 	}
 

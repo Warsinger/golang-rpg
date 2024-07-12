@@ -18,9 +18,9 @@ Attack mosters. Pick up loot. Save the princess?
 * ~~Vary monster images~~
 * Add real monster images
 * Spawning monsters
-* Randomize damage
+* Randomize damage (damage dice)
 * Add weapons and armor
-* Background image
+* ~~Background image~~
 * Smooth out drawing during movement
 * Cache image loading
 * ~~Support variable sprite frame count~~

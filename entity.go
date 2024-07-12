@@ -124,7 +124,7 @@ func (a *AttackInfo) GetAttackPower() int {
 
 func (a *AttackInfo) Attack(d Entity) {
 	// calculate the attackers's attack value and subtract from defender's health
-	pAttack := int(math.Max(float64(rand.IntN(a.AttackPower+1)-d.GetDefense()), 0))
+	pAttack := int(math.Max(float64(rand.IntN(a.AttackPower)+1-d.GetDefense()), 0))
 	d.SetCurrentHealth(int(math.Max(float64(d.GetCurrentHealth()-pAttack), 0)))
 
 	incrementFrame(&a.attackFrame, a.attackAsset)

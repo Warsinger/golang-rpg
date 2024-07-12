@@ -95,6 +95,6 @@ func (q *Queue[T]) TryDequeue() (T, bool) {
 	return value, true
 }
 
-func (q *Queue[T]) Size() int {
-	return len(q.bucket)
+func (q *Queue[T]) IsEmpty() bool {
+	return len(q.bucket) == 0
 }
