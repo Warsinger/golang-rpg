@@ -34,8 +34,8 @@ func Test_maxXY(t *testing.T) {
 	tests := []struct {
 		name  string
 		o     ObjectInfo
-		want  float64
-		want1 float64
+		want  int
+		want1 int
 	}{
 		{"0,0", ObjectInfo{Size: 1, GridX: 0, GridY: 0}, 0, 0},
 		{"1,0", ObjectInfo{Size: 1, GridX: 1, GridY: 0}, 1, 0},
@@ -109,5 +109,27 @@ func TestQueue(t *testing.T) {
 
 	if !q.IsEmpty() {
 		t.Error("queue should be empty 1")
+	}
+}
+
+func TestAbs(t *testing.T) {
+
+	tests := []struct {
+		name string
+		arg  int
+		want int
+	}{
+		{"zero", 0, 0},
+		{"positive 1", 1, 1},
+		{"positive 100", 100, 100},
+		{"negative 1", -1, 1},
+		{"negative 100", -100, 100},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := Abs(tt.arg); got != tt.want {
+				t.Errorf("Abs() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }

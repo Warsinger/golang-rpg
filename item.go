@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"math"
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -45,7 +44,7 @@ type HealthPackInfo struct {
 
 func (h *HealthPackInfo) Use(e Entity) {
 	if !h.Used {
-		e.SetCurrentHealth(int(math.Min(float64(e.GetCurrentHealth()+h.Value), float64(e.GetMaxHealth()))))
+		e.SetCurrentHealth(int(min(e.GetCurrentHealth()+h.Value, e.GetMaxHealth())))
 		h.Used = true
 	}
 }
