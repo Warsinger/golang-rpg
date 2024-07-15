@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -22,7 +23,7 @@ type Board interface {
 	GetGridWidth() int
 	GetGridHeight() int
 	GetGridSize() int
-	GridToXY(gridX, gridY int) (float32, float32)
+	GridToXY(gridX, gridY int) (float32, float32, error)
 	AddObjectToBoard(o Object)
 	RemoveObjectFromBoard(o Object)
 	UpdateBoardForObject(o Object, occupy bool)
@@ -71,8 +72,19 @@ func (b *BoardInfo) Draw(screen *ebiten.Image) {
 	// }
 }
 
-func (b *BoardInfo) GridToXY(gridX, gridY int) (float32, float32) {
-	return float32(gridX * b.GetGridSize()), float32(gridY * b.GetGridSize())
+type BoardError struct {
+	message string
+}
+
+func (e *BoardError) Error() string {
+	return e.message
+}
+
+func (b *BoardInfo) GridToXY(gridX, gridY int) (float32, float32, error) {
+	if gridX < 0 || gridY < 0 || gridX >= b.GridWidth || gridY >= b.GridHeight {
+		return -1, -1, &BoardError{fmt.Sprintf("grid values out of range %d, %d; max (%d, %d)", gridX, gridY, b.GridWidth, b.GridHeight)}
+	}
+	return float32(gridX * b.GetGridSize()), float32(gridY * b.GetGridSize()), nil
 }
 
 func (b *BoardInfo) AddObjectToBoard(o Object) {

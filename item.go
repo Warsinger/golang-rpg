@@ -24,8 +24,8 @@ type ItemInfo struct {
 type Item interface {
 	Object
 
-	Draw(screen *ebiten.Image, b Board)
-	Select(screen *ebiten.Image, b Board)
+	Draw(screen *ebiten.Image, b Board) error
+	Select(screen *ebiten.Image, b Board) error
 	GetAsset() Asset
 
 	GetValue() int
@@ -72,16 +72,19 @@ func (i *ItemInfo) inRange(e Entity, reach int) bool {
 	return inRange(i, e, reach)
 }
 
-func (t *TreasureInfo) Draw(screen *ebiten.Image, b Board) {
-	drawItem(screen, t, color.RGBA{255, 215, 0, 255}, b)
+func (t *TreasureInfo) Draw(screen *ebiten.Image, b Board) error {
+	return drawItem(screen, t, color.RGBA{255, 215, 0, 255}, b)
 }
-func (h *HealthPackInfo) Draw(screen *ebiten.Image, b Board) {
-	drawItem(screen, h, color.RGBA{100, 255, 100, 255}, b)
+func (h *HealthPackInfo) Draw(screen *ebiten.Image, b Board) error {
+	return drawItem(screen, h, color.RGBA{100, 255, 100, 255}, b)
 }
 
-func drawItem(screen *ebiten.Image, i Item, c color.Color, b Board) {
+func drawItem(screen *ebiten.Image, i Item, c color.Color, b Board) error {
 	if !i.GetUsed() {
-		x, y := b.GridToXY(i.GetGridX(), i.GetGridY())
+		x, y, err := b.GridToXY(i.GetGridX(), i.GetGridY())
+		if err != nil {
+			return err
+		}
 		s := float32(i.GetSize() * b.GetGridSize())
 		vector.DrawFilledRect(screen, x, y, s, s, c, true)
 
@@ -97,6 +100,7 @@ func drawItem(screen *ebiten.Image, i Item, c color.Color, b Board) {
 
 		drawInfo(screen, i, x+4, y-10)
 	}
+	return nil
 }
 
 func drawInfo(screen *ebiten.Image, i Item, x, y float32) {
@@ -119,12 +123,16 @@ func (i *ItemInfo) GetAsset() Asset {
 	return i.asset
 }
 
-func (i *ItemInfo) Select(screen *ebiten.Image, b Board) {
+func (i *ItemInfo) Select(screen *ebiten.Image, b Board) error {
 	if !i.Used {
-		x, y := b.GridToXY(i.GridX, i.GridY)
+		x, y, err := b.GridToXY(i.GridX, i.GridY)
+		if err != nil {
+			return err
+		}
 		s := float32(i.Size * b.GetGridSize())
 		vector.StrokeRect(screen, x, y, s, s, 2, color.RGBA{0, 255, 255, 255}, true)
 	}
+	return nil
 }
 
 func NewTreasure(b Board, am AssetManager, gold, x, y, size int) *TreasureInfo {

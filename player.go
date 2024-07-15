@@ -34,7 +34,7 @@ type Player interface {
 	Entity
 	Attacker
 
-	Draw(screen *ebiten.Image, b Board)
+	Draw(screen *ebiten.Image, b Board) error
 
 	GetExperience() int
 	GetLevel() int
@@ -68,7 +68,7 @@ func LoadPlayer(b Board, am AssetManager) (Player, error) {
 	return &player, nil
 }
 
-func (p *PlayerInfo) Draw(screen *ebiten.Image, b Board) {
+func (p *PlayerInfo) Draw(screen *ebiten.Image, b Board) error {
 	pt := p.DequeueMove()
 	var x, y float32
 	incFrame := false
@@ -76,7 +76,11 @@ func (p *PlayerInfo) Draw(screen *ebiten.Image, b Board) {
 		x, y = float32(pt.X), float32(pt.Y)
 		incFrame = true
 	} else {
-		x, y = b.GridToXY(p.GridX, p.GridY)
+		var err error
+		x, y, err = b.GridToXY(p.GridX, p.GridY)
+		if err != nil {
+			return err
+		}
 	}
 
 	var c color.Color
@@ -123,6 +127,7 @@ func (p *PlayerInfo) Draw(screen *ebiten.Image, b Board) {
 	// ebitenutil.DebugPrintAt(screen, debug, 400, 10)
 
 	p.DrawInfo(screen, 4, 4)
+	return nil
 }
 
 func (p *PlayerInfo) AttackMonster(m Monster) {
@@ -199,10 +204,16 @@ func (p *PlayerInfo) Move(direction Direction, b Board) bool {
 	return false
 }
 
-func (p *PlayerInfo) queuePoints(gx1, gy1, gx2, gy2 int, b Board) {
+func (p *PlayerInfo) queuePoints(gx1, gy1, gx2, gy2 int, b Board) error {
 	const stepsPerFrame = 12
-	x1, y1 := b.GridToXY(gx1, gy1)
-	x2, y2 := b.GridToXY(gx2, gy2)
+	x1, y1, err := b.GridToXY(gx1, gy1)
+	if err != nil {
+		return err
+	}
+	x2, y2, err2 := b.GridToXY(gx2, gy2)
+	if err2 != nil {
+		return err2
+	}
 	stepSize := b.GetGridSize() / stepsPerFrame
 	var pt image.Point
 	if gx1 != gx2 {
@@ -216,6 +227,7 @@ func (p *PlayerInfo) queuePoints(gx1, gy1, gx2, gy2 int, b Board) {
 			p.EnqueueMove(&pt)
 		}
 	}
+	return nil
 }
 
 func (p *PlayerInfo) UseItem(i Item) {

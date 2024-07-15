@@ -19,13 +19,16 @@ type Monster interface {
 	Entity
 	Attacker
 
-	Draw(screen *ebiten.Image, b Board)
-	Select(screen *ebiten.Image, b Board)
+	Draw(screen *ebiten.Image, b Board) error
+	Select(screen *ebiten.Image, b Board) error
 	Loot(b Board, am AssetManager) Item
 }
 
-func (m *MonsterInfo) Draw(screen *ebiten.Image, b Board) {
-	x, y := b.GridToXY(m.GridX, m.GridY)
+func (m *MonsterInfo) Draw(screen *ebiten.Image, b Board) error {
+	x, y, err := b.GridToXY(m.GridX, m.GridY)
+	if err != nil {
+		return err
+	}
 	if m.Alive() {
 		s := float32(m.Size * b.GetGridSize())
 		vector.DrawFilledRect(screen, x, y, s, s, color.RGBA{255, 0, 0, 255}, true)
@@ -42,14 +45,19 @@ func (m *MonsterInfo) Draw(screen *ebiten.Image, b Board) {
 		screen.DrawImage(img.SubImage(rect).(*ebiten.Image), opts)
 	}
 	m.DrawInfo(screen, x, y)
+	return nil
 }
 
-func (m *MonsterInfo) Select(screen *ebiten.Image, b Board) {
+func (m *MonsterInfo) Select(screen *ebiten.Image, b Board) error {
 	if m.Alive() {
-		x, y := b.GridToXY(m.GridX, m.GridY)
+		x, y, err := b.GridToXY(m.GridX, m.GridY)
+		if err != nil {
+			return err
+		}
 		s := float32(m.Size * b.GetGridSize())
 		vector.StrokeRect(screen, x, y, s, s, 2, color.RGBA{0, 255, 255, 255}, true)
 	}
+	return nil
 }
 
 func (m *MonsterInfo) Loot(b Board, am AssetManager) Item {

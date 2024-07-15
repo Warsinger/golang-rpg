@@ -16,7 +16,6 @@ func TestAttackInfo_Attack(t *testing.T) {
 		fields fields
 		args   args
 	}{
-		// TODO: Add test cases.
 		{"case 1", fields{1, &AssetInfo{FrameCount: 5}, 0}, args{EntityInfo{CurrentHealth: 10, Defense: 0}}},
 		{"case 2", fields{2, &AssetInfo{FrameCount: 5}, 0}, args{EntityInfo{CurrentHealth: 10, Defense: 0}}},
 		{"case 3", fields{5, &AssetInfo{FrameCount: 5}, 0}, args{EntityInfo{CurrentHealth: 10, Defense: 0}}},
@@ -53,7 +52,6 @@ func TestAttackInfo_AttackHighDefense(t *testing.T) {
 		args       args
 		wantHealth int
 	}{
-		// TODO: Add test cases.
 		{"case 1", fields{5, &AssetInfo{FrameCount: 5}, 0}, args{EntityInfo{CurrentHealth: 10, Defense: 5}}, 9},
 		{"case 2", fields{5, &AssetInfo{FrameCount: 5}, 0}, args{EntityInfo{CurrentHealth: 100, Defense: 10}}, 8},
 	}
