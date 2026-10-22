@@ -1,9 +1,11 @@
-package main
+package game
 
 import (
 	"fmt"
 	"image/color"
 	"os"
+
+	"golang-rpg/assets"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -15,7 +17,16 @@ type GameInfo struct {
 	Player       Player
 	Monsters     []Monster
 	Items        []Item
-	AssetManager AssetManager
+	AssetManager assets.AssetManager
+}
+
+// New loads the configured scene from the repository working directory.
+func New() (*GameInfo, error) {
+	g := &GameInfo{}
+	if err := g.Init(); err != nil {
+		return nil, err
+	}
+	return g, nil
 }
 
 type Game interface {
@@ -23,7 +34,7 @@ type Game interface {
 	GetPlayer() Player
 	GetMonsters() []Monster
 	GetItems() []Item
-	GetAssetManager() AssetManager
+	GetAssetManager() assets.AssetManager
 	Init() error
 	Load() error
 	Save() error
@@ -170,7 +181,7 @@ func (g *GameInfo) loadScene() error {
 	g.Player = nil
 
 	var err error
-	g.AssetManager, err = LoadAssets()
+	g.AssetManager, err = assets.LoadAssets()
 	if err != nil {
 		return err
 	}

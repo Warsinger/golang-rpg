@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"log"
 
+	"golang-rpg/game"
+
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
 func main() {
-	g := &GameInfo{}
-
-	if err := g.Init(); err != nil {
+	g, err := game.New()
+	if err != nil {
 		log.Fatalf("start RPG: %v", err)
 	}
 

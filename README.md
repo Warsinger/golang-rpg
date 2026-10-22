@@ -1,6 +1,6 @@
 # golang-rpg
 
-An early Go/Ebitengine RPG prototype, built for fun and learning. Move around a tiled board, fight stationary monsters, collect treasure and health packs, and gain experience. The current design uses ordinary Go structs and interfaces, not ECS.
+An early Go/Ebitengine RPG prototype, built for fun and learning. Move around a tiled board, fight stationary monsters, collect treasure and health packs, and gain experience. The current design uses ordinary Go structs and interfaces, not ECS. The root `main.go` launches the application; runtime/entities live in `game/`, image/font ownership in `assets/`, and reusable YAML/queue helpers in `internal/`. Tests live with their packages.
 
 There is no quest, princess objective, monster AI, equipment system, or complete RPG campaign yet. Broader game design will be developed separately from modernization.
 

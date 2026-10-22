@@ -1,8 +1,9 @@
-package main
+package game
 
 import (
-	"bytes"
 	"log"
+
+	"golang-rpg/assets"
 
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"golang.org/x/exp/constraints"
@@ -36,7 +37,7 @@ func maxXY(o Object) (int, int) {
 	return o.GetGridX() + o.GetSize() - 1, o.GetGridY() + o.GetSize() - 1
 }
 
-func incrementFrame(frame *int, a Asset) {
+func incrementFrame(frame *int, a assets.Asset) {
 	*frame += 1
 	if *frame >= a.GetFrameCount() {
 		*frame = 0
@@ -59,7 +60,7 @@ var (
 )
 
 func init() {
-	s, err := text.NewGoTextFaceSource(bytes.NewReader(arcadeFont))
+	s, err := text.NewGoTextFaceSource(assets.FontReader())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -73,34 +74,4 @@ func init() {
 	// 	Source: mplusFaceSource,
 	// 	GetSize():   24,
 	// }
-}
-
-type Queue[T any] struct {
-	bucket []T
-}
-
-func NewQueue[T any]() *Queue[T] {
-	return &Queue[T]{
-		bucket: []T{},
-	}
-}
-
-func (q *Queue[T]) Enqueue(input T) {
-	q.bucket = append(q.bucket, input)
-}
-
-func (q *Queue[T]) TryDequeue() (T, bool) {
-	if len(q.bucket) == 0 {
-		var dummy T
-		return dummy, false
-	}
-	value := q.bucket[0]
-	var zero T
-	q.bucket[0] = zero // Avoid memory leak
-	q.bucket = q.bucket[1:]
-	return value, true
-}
-
-func (q *Queue[T]) IsEmpty() bool {
-	return len(q.bucket) == 0
 }

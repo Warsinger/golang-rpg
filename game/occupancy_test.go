@@ -1,6 +1,8 @@
-package main
+package game
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestRemovalDoesNotClearReplacementOccupant(t *testing.T) {
 	b := &BoardInfo{GridWidth: 3, GridHeight: 2, GridSize: 48, occupied: make([]Object, 6)}

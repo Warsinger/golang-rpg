@@ -1,44 +1,11 @@
-package main
+package game
 
 import (
-	"errors"
 	"fmt"
-	"io"
-	"os"
 	"strings"
 
-	"go.yaml.in/yaml/v3"
+	"golang-rpg/assets"
 )
-
-// readConfig accepts one strict YAML document and keeps filesystem failures wrapped.
-func readConfig(path string, value any) error {
-	f, err := os.Open(path)
-	if err != nil {
-		return fmt.Errorf("read %s: %w (run from the repository root)", path, err)
-	}
-	defer f.Close()
-	const maxConfigBytes = 1 << 20
-	data, err := io.ReadAll(io.LimitReader(f, maxConfigBytes+1))
-	if err != nil {
-		return fmt.Errorf("read %s: %w", path, err)
-	}
-	if len(data) > maxConfigBytes {
-		return fmt.Errorf("%s: configuration exceeds 1 MiB", path)
-	}
-	decoder := yaml.NewDecoder(strings.NewReader(string(data)))
-	decoder.KnownFields(true)
-	if err := decoder.Decode(value); err != nil {
-		return fmt.Errorf("decode %s: %w", path, err)
-	}
-	var extra any
-	if err := decoder.Decode(&extra); !errors.Is(err, io.EOF) {
-		if err == nil {
-			return fmt.Errorf("%s: expected a single YAML document", path)
-		}
-		return fmt.Errorf("decode %s: %w", path, err)
-	}
-	return nil
-}
 
 func validateBoard(b *BoardInfo) error {
 	// Movement interpolation divides GridSize by 12; smaller cells would loop forever.
@@ -73,7 +40,7 @@ func validateEntity(e *EntityInfo, a *AttackInfo, context string) error {
 	return nil
 }
 
-func requiredAsset(am AssetManager, name string, kind AssetType, gridSize int, context string) error {
+func requiredAsset(am assets.AssetManager, name string, kind assets.AssetType, gridSize int, context string) error {
 	a := am.GetAssetInfo(name, kind)
 	if a == nil || a.GetImage() == nil {
 		return fmt.Errorf("%s: missing asset %q of type %q", context, name, kind)

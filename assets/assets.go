@@ -1,4 +1,5 @@
-package main
+// Package assets owns the image registry and embedded font resource.
+package assets
 
 import (
 	"bytes"
@@ -8,6 +9,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"golang-rpg/internal/configfile"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -46,7 +49,7 @@ func LoadAssets() (AssetManager, error) {
 	am := &AssetManagerInfo{}
 
 	var assets []*AssetInfo
-	if err := readConfig("config/assets.yml", &assets); err != nil {
+	if err := configfile.Read("config/assets.yml", &assets); err != nil {
 		return nil, err
 	}
 	am.assets = make(map[string]map[AssetType]Asset)

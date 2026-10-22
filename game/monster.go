@@ -1,10 +1,13 @@
-package main
+package game
 
 import (
 	"fmt"
 	"image"
 	"image/color"
 	"strings"
+
+	"golang-rpg/assets"
+	"golang-rpg/internal/configfile"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
@@ -20,7 +23,7 @@ type Monster interface {
 
 	Draw(screen *ebiten.Image, b Board) error
 	Select(screen *ebiten.Image, b Board) error
-	Loot(b Board, am AssetManager) Item
+	Loot(b Board, am assets.AssetManager) Item
 }
 
 func (m *MonsterInfo) Draw(screen *ebiten.Image, b Board) error {
@@ -59,13 +62,13 @@ func (m *MonsterInfo) Select(screen *ebiten.Image, b Board) error {
 	return nil
 }
 
-func (m *MonsterInfo) Loot(b Board, am AssetManager) Item {
+func (m *MonsterInfo) Loot(b Board, am assets.AssetManager) Item {
 	return NewTreasure(b, am, m.Gold, m.GridX, m.GridY, m.Size)
 }
 
-func LoadMonsters(b Board, am AssetManager) ([]*MonsterInfo, error) {
+func LoadMonsters(b Board, am assets.AssetManager) ([]*MonsterInfo, error) {
 	var monsters []*MonsterInfo
-	if err := readConfig("config/monsters.yml", &monsters); err != nil {
+	if err := configfile.Read("config/monsters.yml", &monsters); err != nil {
 		return nil, err
 	}
 
@@ -102,6 +105,6 @@ func monsterCharacter(name string) string {
 	return monsterIcon
 }
 
-func (m *MonsterInfo) LoadImages(am AssetManager) {
+func (m *MonsterInfo) LoadImages(am assets.AssetManager) {
 	m.LoadAttackImage(am, monsterCharacter(m.Name))
 }

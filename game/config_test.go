@@ -1,9 +1,8 @@
-package main
+package game
 
 import (
 	"bytes"
 	"encoding/binary"
-	"errors"
 	"hash/crc32"
 	"image"
 	"image/png"
@@ -13,12 +12,15 @@ import (
 	"strings"
 	"testing"
 
+	"golang-rpg/assets"
+	"golang-rpg/internal/configfile"
+
 	"go.yaml.in/yaml/v3"
 )
 
 func copyScene(t *testing.T) {
 	t.Helper()
-	root, err := os.Getwd()
+	root, err := filepath.Abs("..")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -52,7 +54,7 @@ func copyScene(t *testing.T) {
 func rewriteConfig[T any](t *testing.T, path string, change func(*T)) {
 	t.Helper()
 	var value T
-	if err := readConfig(path, &value); err != nil {
+	if err := configfile.Read(path, &value); err != nil {
 		t.Fatal(err)
 	}
 	change(&value)
@@ -67,8 +69,8 @@ func rewriteConfig[T any](t *testing.T, path string, change func(*T)) {
 
 func TestShippedSceneAndReload(t *testing.T) {
 	copyScene(t)
-	g := &GameInfo{}
-	if err := g.Init(); err != nil {
+	g, err := New()
+	if err != nil {
 		t.Fatal(err)
 	}
 	if g.Board.GetWidth() != 1920 || g.Board.GetHeight() != 1440 || len(g.Monsters) != 6 || len(g.Items) != 6 || g.Player.GetName() != "Warsinger" {
@@ -92,7 +94,7 @@ func TestFailedReloadPreservesScene(t *testing.T) {
 	if err := g.Init(); err != nil {
 		t.Fatal(err)
 	}
-	board, player, assets := g.Board, g.Player, g.AssetManager
+	board, player, manager := g.Board, g.Player, g.AssetManager
 	if err := os.WriteFile("config/monsters.yml", []byte("- null\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -100,7 +102,7 @@ func TestFailedReloadPreservesScene(t *testing.T) {
 	if err == nil || !strings.Contains(err.Error(), "config/monsters.yml[0]") {
 		t.Fatalf("expected contextual reload failure, got %v", err)
 	}
-	if g.Board != board || g.Player != player || g.AssetManager != assets || len(g.Items) != 6 || len(g.Monsters) != 6 {
+	if g.Board != board || g.Player != player || g.AssetManager != manager || len(g.Items) != 6 || len(g.Monsters) != 6 {
 		t.Fatal("failed reload replaced the active scene")
 	}
 }
@@ -152,7 +154,7 @@ func TestInvalidStartupConfigurations(t *testing.T) {
 			rewriteConfig(t, "config/player.yml", func(p *PlayerInfo) { p.Character = "Missing" })
 		}},
 		{"sprite too small for cells", "config/player.yml", func(t *testing.T) {
-			rewriteConfig(t, "config/assets.yml", func(a *[]*AssetInfo) { (*a)[0].FrameCount = 7; (*a)[0].Size = 1 })
+			rewriteConfig(t, "config/assets.yml", func(a *[]*assets.AssetInfo) { (*a)[0].FrameCount = 7; (*a)[0].Size = 1 })
 		}},
 		{"null treasure", "config/treasures.yml[0]", func(t *testing.T) {
 			if err := os.WriteFile("config/treasures.yml", []byte("- null\n"), 0644); err != nil {
@@ -190,16 +192,16 @@ func TestInvalidStartupConfigurations(t *testing.T) {
 			}
 		}},
 		{"duplicate asset", "duplicate asset", func(t *testing.T) {
-			rewriteConfig(t, "config/assets.yml", func(a *[]*AssetInfo) { *a = append(*a, (*a)[0]) })
+			rewriteConfig(t, "config/assets.yml", func(a *[]*assets.AssetInfo) { *a = append(*a, (*a)[0]) })
 		}},
 		{"bad asset type", "unsupported asset type", func(t *testing.T) {
-			rewriteConfig(t, "config/assets.yml", func(a *[]*AssetInfo) { (*a)[0].Type = "mystery" })
+			rewriteConfig(t, "config/assets.yml", func(a *[]*assets.AssetInfo) { (*a)[0].Type = "mystery" })
 		}},
 		{"zero frames", "framecount", func(t *testing.T) {
-			rewriteConfig(t, "config/assets.yml", func(a *[]*AssetInfo) { (*a)[0].FrameCount = 0 })
+			rewriteConfig(t, "config/assets.yml", func(a *[]*assets.AssetInfo) { (*a)[0].FrameCount = 0 })
 		}},
 		{"asset traversal", "local names", func(t *testing.T) {
-			rewriteConfig(t, "config/assets.yml", func(a *[]*AssetInfo) { (*a)[0].FilePath = "../walk.png" })
+			rewriteConfig(t, "config/assets.yml", func(a *[]*assets.AssetInfo) { (*a)[0].FilePath = "../walk.png" })
 		}},
 		{"missing image", "walk.png", func(t *testing.T) {
 			if err := os.Remove("assets/characters/Warrior/walk.png"); err != nil {
@@ -222,20 +224,6 @@ func TestInvalidStartupConfigurations(t *testing.T) {
 				t.Fatalf("want %q error, got %v", test.context, err)
 			}
 		})
-	}
-}
-
-func TestReadConfigLimitsAndWrappedErrors(t *testing.T) {
-	t.Chdir(t.TempDir())
-	var value BoardInfo
-	if err := readConfig("missing.yml", &value); !errors.Is(err, os.ErrNotExist) {
-		t.Fatalf("missing error lost its cause: %v", err)
-	}
-	if err := os.WriteFile("large.yml", make([]byte, (1<<20)+1), 0644); err != nil {
-		t.Fatal(err)
-	}
-	if err := readConfig("large.yml", &value); err == nil || !strings.Contains(err.Error(), "1 MiB") {
-		t.Fatalf("expected size limit, got %v", err)
 	}
 }
 

@@ -1,4 +1,4 @@
-package main
+package game
 
 import (
 	"errors"
@@ -8,20 +8,23 @@ import (
 	"strings"
 	"testing"
 
+	"golang-rpg/assets"
+	"golang-rpg/internal/collections"
+
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
 func ruleScene() *GameInfo {
 	b := &BoardInfo{GridWidth: 8, GridHeight: 6, GridSize: 48, occupied: make([]Object, 48)}
-	walk, attack, death := &AssetInfo{FrameCount: 3}, &AssetInfo{FrameCount: 3}, &AssetInfo{FrameCount: 3}
-	p := &PlayerInfo{EntityInfo: EntityInfo{ObjectInfo: ObjectInfo{GridX: 1, GridY: 1, Size: 1}, Name: "Player", MaxHealth: 100, CurrentHealth: 100, Gold: 10, Defense: 1}, AttackInfo: AttackInfo{AttackPower: 6, attackAsset: attack, randomIntN: func(n int) int { return n - 1 }}, Level: 1, walkAsset: walk, deathAsset: death, moveQueue: NewQueue[image.Point]()}
-	am := &AssetManagerInfo{assets: map[string]map[AssetType]Asset{"Treasure": {"item": &AssetInfo{FrameCount: 1}}, "HealthPack": {"item": &AssetInfo{FrameCount: 1}}}}
+	walk, attack, death := &assets.AssetInfo{FrameCount: 3}, &assets.AssetInfo{FrameCount: 3}, &assets.AssetInfo{FrameCount: 3}
+	p := &PlayerInfo{EntityInfo: EntityInfo{ObjectInfo: ObjectInfo{GridX: 1, GridY: 1, Size: 1}, Name: "Player", MaxHealth: 100, CurrentHealth: 100, Gold: 10, Defense: 1}, AttackInfo: AttackInfo{AttackPower: 6, attackAsset: attack, randomIntN: func(n int) int { return n - 1 }}, Level: 1, walkAsset: walk, deathAsset: death, moveQueue: collections.NewQueue[image.Point]()}
+	am := ruleAssets{"Treasure": {"item": &assets.AssetInfo{FrameCount: 1}}, "HealthPack": {"item": &assets.AssetInfo{FrameCount: 1}}}
 	b.AddObjectToBoard(p)
 	return &GameInfo{Board: b, Player: p, AssetManager: am}
 }
 
 func addMonster(g *GameInfo, x, y, hp int) *MonsterInfo {
-	m := &MonsterInfo{EntityInfo: EntityInfo{ObjectInfo: ObjectInfo{GridX: x, GridY: y, Size: 1}, Name: "Monster", MaxHealth: hp, CurrentHealth: hp, Defense: 2, Gold: 12, ExperienceValue: 16}, AttackInfo: AttackInfo{AttackPower: 3, attackAsset: &AssetInfo{FrameCount: 3}, randomIntN: func(n int) int { return n - 1 }}}
+	m := &MonsterInfo{EntityInfo: EntityInfo{ObjectInfo: ObjectInfo{GridX: x, GridY: y, Size: 1}, Name: "Monster", MaxHealth: hp, CurrentHealth: hp, Defense: 2, Gold: 12, ExperienceValue: 16}, AttackInfo: AttackInfo{AttackPower: 3, attackAsset: &assets.AssetInfo{FrameCount: 3}, randomIntN: func(n int) int { return n - 1 }}}
 	g.Board.AddObjectToBoard(m)
 	g.Monsters = append(g.Monsters, m)
 	return m
@@ -376,4 +379,10 @@ func TestLargePlayerMovesOverOwnFootprint(t *testing.T) {
 			t.Fatalf("old player cell not cleared: %v", pt)
 		}
 	}
+}
+
+type ruleAssets map[string]map[assets.AssetType]assets.Asset
+
+func (a ruleAssets) GetAssetInfo(name string, kind assets.AssetType) assets.Asset {
+	return a[name][kind]
 }
