@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"log"
 
-	"github.com/hajimehoshi/ebiten/examples/resources/fonts"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"golang.org/x/exp/constraints"
 )
@@ -60,7 +59,7 @@ var (
 )
 
 func init() {
-	s, err := text.NewGoTextFaceSource(bytes.NewReader(fonts.ArcadeN_ttf))
+	s, err := text.NewGoTextFaceSource(bytes.NewReader(arcadeFont))
 	if err != nil {
 		log.Fatal(err)
 	}

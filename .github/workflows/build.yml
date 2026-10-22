@@ -1,0 +1,43 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Verify dependencies
+        run: |
+          go mod download
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          go mod verify
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          go mod tidy -diff
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Check native application
+        run: |
+          go vet ./...
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          go test ./...
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          go build -o build/golang-rpg.exe .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Check WebAssembly compilation
+        env:
+          GOOS: js
+          GOARCH: wasm
+        run: |
+          go build -o build/golang-rpg.wasm .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

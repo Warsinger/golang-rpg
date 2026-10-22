@@ -1,2 +1,7 @@
 .DS_Store
 game_state.yml
+/build/
+/bin/
+/golang-rpg
+/*.exe
+/coverage.out
