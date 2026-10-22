@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 	"os"
 
@@ -23,17 +24,21 @@ type Game interface {
 	GetMonsters() []Monster
 	GetItems() []Item
 	GetAssetManager() AssetManager
-	Init()
+	Init() error
 	Load() error
 	Save() error
 }
 
 func (g *GameInfo) Update() error {
 	if inpututil.IsKeyJustPressed(ebiten.KeyR) {
-		g.Init()
+		if err := g.Init(); err != nil {
+			return fmt.Errorf("reset game: %w", err)
+		}
 	}
 	if inpututil.IsKeyJustPressed(ebiten.KeyQ) {
-		g.Save()
+		if err := g.Save(); err != nil {
+			return fmt.Errorf("save before quit: %w", err)
+		}
 		return ebiten.Termination
 	}
 	if g.Player.Alive() {
@@ -84,12 +89,8 @@ func (g *GameInfo) Update() error {
 	return nil
 }
 
-func (g *GameInfo) Init() {
-	err := g.Load()
-	if err != nil {
-		panic(err)
-	}
-}
+func (g *GameInfo) Init() error { return g.Load() }
+
 func (g *GameInfo) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0, 0, 0, 255}) // Clear screen
 
@@ -120,16 +121,25 @@ func (g *GameInfo) Layout(outsideWidth, outsideHeight int) (int, int) {
 func (g *GameInfo) Save() error {
 	data, err := yaml.Marshal(g)
 	if err != nil {
-		return err
+		return fmt.Errorf("encode game_state.yml: %w", err)
 	}
 	err = os.WriteFile("game_state.yml", data, 0644)
 	if err != nil {
-		return err
+		return fmt.Errorf("write game_state.yml: %w", err)
 	}
 	return nil
 }
 
 func (g *GameInfo) Load() error {
+	next := &GameInfo{}
+	if err := next.loadScene(); err != nil {
+		return err
+	}
+	*g = *next
+	return nil
+}
+
+func (g *GameInfo) loadScene() error {
 	g.Items = nil
 	g.Monsters = nil
 	g.Player = nil
@@ -144,7 +154,7 @@ func (g *GameInfo) Load() error {
 	if err != nil {
 		return err
 	}
-	// TODO when loading assets make sure they don't collide on the board
+	// Placements are validated against the temporary board before commit.
 
 	g.Player, err = LoadPlayer(g.Board, g.AssetManager)
 	if err != nil {

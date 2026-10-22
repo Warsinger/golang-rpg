@@ -10,7 +10,9 @@ import (
 func main() {
 	g := &GameInfo{}
 
-	g.Init()
+	if err := g.Init(); err != nil {
+		log.Fatalf("start RPG: %v", err)
+	}
 
 	fmt.Println("Arrow Keys to move")
 	fmt.Println("A key to attack monster when in range")

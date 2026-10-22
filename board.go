@@ -2,10 +2,8 @@ package main
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"go.yaml.in/yaml/v3"
 )
 
 type BoardInfo struct {
@@ -33,13 +31,14 @@ type Board interface {
 }
 
 func LoadBoard(am AssetManager) (Board, error) {
-	yamlFile, err := os.ReadFile("config/board.yml")
-	if err != nil {
+	var board BoardInfo
+	if err := readConfig("config/board.yml", &board); err != nil {
 		return nil, err
 	}
-	var board BoardInfo
-	err = yaml.Unmarshal(yamlFile, &board)
-	if err != nil {
+	if err := validateBoard(&board); err != nil {
+		return nil, err
+	}
+	if err := requiredAsset(am, board.TileSet, "tile", board.GridSize, "config/board.yml"); err != nil {
 		return nil, err
 	}
 	board.occupied = make([]Object, board.GridWidth*board.GridHeight)

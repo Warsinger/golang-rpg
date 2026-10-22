@@ -4,12 +4,10 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
-	"go.yaml.in/yaml/v3"
 )
 
 type AnimState string
@@ -50,16 +48,25 @@ type Player interface {
 }
 
 func LoadPlayer(b Board, am AssetManager) (Player, error) {
-	yamlFile, err := os.ReadFile("config/player.yml")
-	if err != nil {
-		return nil, err
-	}
 	var player PlayerInfo
-	err = yaml.Unmarshal(yamlFile, &player)
-	if err != nil {
+	if err := readConfig("config/player.yml", &player); err != nil {
 		return nil, err
 	}
 
+	if err := validateEntity(&player.EntityInfo, &player.AttackInfo, "config/player.yml"); err != nil {
+		return nil, err
+	}
+	if player.Experience < 0 || player.Level < 0 {
+		return nil, fmt.Errorf("config/player.yml: experience and level must be nonnegative")
+	}
+	if err := validatePlacement(b, &player, "config/player.yml"); err != nil {
+		return nil, err
+	}
+	for _, kind := range []AssetType{"walk", "attack", "death"} {
+		if err := requiredAsset(am, player.Character, kind, b.GetGridSize(), "config/player.yml"); err != nil {
+			return nil, err
+		}
+	}
 	b.AddObjectToBoard(&player)
 
 	player.LoadImages(am)
