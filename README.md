@@ -28,7 +28,7 @@ The shipped board is 40 × 30 cells of 48 pixels, rendered at 1920 × 1440 logic
 | F | Toggle fullscreen |
 | Q | Write `game_state.yml`, then quit |
 
-Reach is measured on the grid, including diagonals and an object's footprint. Gold and health pickups apply once. Killed monsters drop treasure and award experience. Attacks already roll random damage; damage cannot drop health below zero. Level changes increase attack power using the existing progression logic.
+Reach is measured on the grid, including diagonals and an object's footprint. Gold and health pickups apply once and are removed from the scene; their former cells become available for movement. Killed monsters drop treasure and award experience. Attacks already roll random damage; damage cannot drop health below zero. Level changes increase attack power using the existing progression logic.
 
 **Saving does not currently resume a game.** Q writes a diagnostic YAML snapshot in the working directory; startup and R always read the six configuration files, never `game_state.yml`. Closing the window does not call this save path. Save failures are reported rather than silently discarded. Do not rely on the snapshot as durable progress storage.
 
@@ -66,9 +66,9 @@ The prototype uses character sprites, items and tiles from image packs. Their or
 
 ## Roadmap
 
-Existing: tiled background, multiple character images, variable animation frame counts, random combat damage, treasure/health pickups, experience, and initial unit tests.
+Existing: tiled background, multiple character images, variable animation frame counts, random combat damage, treasure/health pickups, experience, deterministic gameplay regression tests and CI coverage reports.
 
-Future work: map exploration, moving/spawning monsters, facing and movement animation improvements, weapons/armor, quests/objectives, asset caching, and resumable saves. Agree gameplay changes separately; an ECS migration is not a prerequisite. [#2](https://github.com/Warsinger/golang-rpg/issues/2) tracks broader gameplay regression tests and coverage reporting.
+Future work: map exploration, moving/spawning monsters, facing and movement animation improvements, weapons/armor, quests/objectives, asset caching, and resumable saves. Agree gameplay changes separately; an ECS migration is not a prerequisite. CI publishes per-function/total coverage in its build summary and an `rpg-coverage` artifact. See the testing guide for coverage limits and characterized gameplay quirks.
 
 ## Screenshots
 

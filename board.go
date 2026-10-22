@@ -98,7 +98,7 @@ func (b *BoardInfo) UpdateBoardForObject(o Object, occupy bool) {
 		for j := o.GetGridY(); j < o.GetGridY()+o.GetSize(); j++ {
 			if occupy {
 				b.occupied[b.GridToIndex(i, j)] = o
-			} else {
+			} else if b.occupied[b.GridToIndex(i, j)] == o {
 				b.occupied[b.GridToIndex(i, j)] = nil
 			}
 		}
