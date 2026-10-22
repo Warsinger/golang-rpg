@@ -4,12 +4,10 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
-	"go.yaml.in/yaml/v3"
 )
 
 type ItemInfo struct {
@@ -144,16 +142,24 @@ func NewTreasure(b Board, am AssetManager, gold, x, y, size int) *TreasureInfo {
 }
 
 func LoadTreasures(b Board, am AssetManager) ([]*TreasureInfo, error) {
-	yamlFile, err := os.ReadFile("config/treasures.yml")
-	if err != nil {
-		return nil, err
-	}
 	var treasures []*TreasureInfo
-	err = yaml.Unmarshal(yamlFile, &treasures)
-	if err != nil {
+	if err := readConfig("config/treasures.yml", &treasures); err != nil {
 		return nil, err
 	}
-	for _, t := range treasures {
+	if err := requiredAsset(am, "Treasure", "item", b.GetGridSize(), "config/treasures.yml"); err != nil {
+		return nil, err
+	}
+	for index, t := range treasures {
+		context := fmt.Sprintf("config/treasures.yml[%d]", index)
+		if t == nil {
+			return nil, fmt.Errorf("%s: null item", context)
+		}
+		if t.Value < 0 {
+			return nil, fmt.Errorf("%s: value must be nonnegative", context)
+		}
+		if err := validatePlacement(b, t, context); err != nil {
+			return nil, err
+		}
 		b.AddObjectToBoard(t)
 
 		t.LoadImages(am, "Treasure")
@@ -163,16 +169,24 @@ func LoadTreasures(b Board, am AssetManager) ([]*TreasureInfo, error) {
 }
 
 func LoadHealthPacks(b Board, am AssetManager) ([]*HealthPackInfo, error) {
-	yamlFile, err := os.ReadFile("config/healthpacks.yml")
-	if err != nil {
-		return nil, err
-	}
 	var healthPacks []*HealthPackInfo
-	err = yaml.Unmarshal(yamlFile, &healthPacks)
-	if err != nil {
+	if err := readConfig("config/healthpacks.yml", &healthPacks); err != nil {
 		return nil, err
 	}
-	for _, h := range healthPacks {
+	if err := requiredAsset(am, "HealthPack", "item", b.GetGridSize(), "config/healthpacks.yml"); err != nil {
+		return nil, err
+	}
+	for index, h := range healthPacks {
+		context := fmt.Sprintf("config/healthpacks.yml[%d]", index)
+		if h == nil {
+			return nil, fmt.Errorf("%s: null item", context)
+		}
+		if h.Value < 0 {
+			return nil, fmt.Errorf("%s: value must be nonnegative", context)
+		}
+		if err := validatePlacement(b, h, context); err != nil {
+			return nil, err
+		}
 		b.AddObjectToBoard(h)
 
 		h.LoadImages(am, "HealthPack")

@@ -1,13 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
-	"log"
+	"image"
+	_ "image/png"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-	"go.yaml.in/yaml/v3"
 )
 
 type AssetType string
@@ -43,23 +45,24 @@ func (am *AssetManagerInfo) GetAssetInfo(name string, assetType AssetType) Asset
 func LoadAssets() (AssetManager, error) {
 	am := &AssetManagerInfo{}
 
-	yamlFile, err := os.ReadFile("config/assets.yml")
-	if err != nil {
-		return nil, err
-	}
 	var assets []*AssetInfo
-	err = yaml.Unmarshal(yamlFile, &assets)
-	if err != nil {
+	if err := readConfig("config/assets.yml", &assets); err != nil {
 		return nil, err
 	}
 	am.assets = make(map[string]map[AssetType]Asset)
-	for _, a := range assets {
+	for index, a := range assets {
+		if err := validateAsset(a, index); err != nil {
+			return nil, err
+		}
+		if am.assets[a.Name][a.Type] != nil {
+			return nil, fmt.Errorf("config/assets.yml[%d]: duplicate asset %q/%s", index, a.Name, a.Type)
+		}
 		if am.assets[a.Name] == nil {
 			am.assets[a.Name] = make(map[AssetType]Asset)
 
 		}
 		am.assets[a.Name][a.Type] = a
-		err = loadImageAsset(a)
+		err := loadImageAsset(a)
 		if err != nil {
 			return nil, err
 		}
@@ -79,14 +82,24 @@ func loadImageAsset(a *AssetInfo) error {
 		typePath = "tiles"
 	}
 
-	filepath := fmt.Sprintf("assets/%s/%s", typePath, a.FilePath)
-	img, _, err := ebitenutil.NewImageFromFile(filepath)
+	path := filepath.Join("assets", typePath, a.FilePath)
+	data, err := os.ReadFile(path)
 	if err != nil {
-		log.Fatalf("failed to load asset %v: %v", a, err)
-		return err
+		return fmt.Errorf("asset %q/%s: %w", a.Name, a.Type, err)
+	}
+	metadata, _, err := image.DecodeConfig(bytes.NewReader(data))
+	if err != nil {
+		return fmt.Errorf("decode asset %s: %w", path, err)
+	}
+	if metadata.Width > 8192 || metadata.Height > 8192 || metadata.Width*metadata.Height > 16_000_000 {
+		return fmt.Errorf("asset %s: image must stay within 8192 pixels per dimension and 16000000 pixels total", path)
+	}
+	img, _, err := image.Decode(bytes.NewReader(data))
+	if err != nil {
+		return fmt.Errorf("load asset %s: %w", path, err)
 	}
 
-	a.image = img
+	a.image = ebiten.NewImageFromImage(img)
 	return nil
 }
 
@@ -112,4 +125,23 @@ func (a *AssetInfo) GetFilePath() string {
 
 func (a *AssetInfo) GetName() string {
 	return a.Name
+}
+
+func validateAsset(a *AssetInfo, index int) error {
+	context := fmt.Sprintf("config/assets.yml[%d]", index)
+	if a == nil {
+		return fmt.Errorf("%s: null asset", context)
+	}
+	if a.Name == "" || a.Name == "." || a.Name == ".." || strings.ContainsAny(a.Name, "/\\:") || a.FilePath == "" || a.FilePath == "." || a.FilePath == ".." || strings.ContainsAny(a.FilePath, "/\\:") {
+		return fmt.Errorf("%s: name and filepath must be nonempty local names without directory separators", context)
+	}
+	if a.Size <= 0 || a.FrameCount <= 0 {
+		return fmt.Errorf("%s: size and framecount must be positive", context)
+	}
+	switch a.Type {
+	case "walk", "attack", "death", "item", "tile":
+	default:
+		return fmt.Errorf("%s: unsupported asset type %q", context, a.Type)
+	}
+	return nil
 }

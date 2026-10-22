@@ -1,14 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"image"
 	"image/color"
-	"os"
 	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
-	"go.yaml.in/yaml/v3"
 )
 
 type MonsterInfo struct {
@@ -65,18 +64,26 @@ func (m *MonsterInfo) Loot(b Board, am AssetManager) Item {
 }
 
 func LoadMonsters(b Board, am AssetManager) ([]*MonsterInfo, error) {
-	yamlFile, err := os.ReadFile("config/monsters.yml")
-	if err != nil {
-		return nil, err
-	}
 	var monsters []*MonsterInfo
-	err = yaml.Unmarshal(yamlFile, &monsters)
-	if err != nil {
+	if err := readConfig("config/monsters.yml", &monsters); err != nil {
 		return nil, err
 	}
 
 	// place monsters on the board
-	for _, m := range monsters {
+	for index, m := range monsters {
+		context := fmt.Sprintf("config/monsters.yml[%d]", index)
+		if m == nil {
+			return nil, fmt.Errorf("%s: null monster", context)
+		}
+		if err := validateEntity(&m.EntityInfo, &m.AttackInfo, context); err != nil {
+			return nil, err
+		}
+		if err := validatePlacement(b, m, context); err != nil {
+			return nil, err
+		}
+		if err := requiredAsset(am, monsterCharacter(m.Name), "attack", b.GetGridSize(), context); err != nil {
+			return nil, err
+		}
 		b.AddObjectToBoard(m)
 
 		m.LoadImages(am)
@@ -85,12 +92,16 @@ func LoadMonsters(b Board, am AssetManager) ([]*MonsterInfo, error) {
 	return monsters, nil
 }
 
-func (m *MonsterInfo) LoadImages(am AssetManager) {
+func monsterCharacter(name string) string {
 	var monsterIcon string
-	if strings.HasPrefix(m.Name, "Barbol") {
+	if strings.HasPrefix(name, "Barbol") {
 		monsterIcon = "SteamMan"
 	} else {
 		monsterIcon = "GraveRobber"
 	}
-	m.LoadAttackImage(am, monsterIcon)
+	return monsterIcon
+}
+
+func (m *MonsterInfo) LoadImages(am AssetManager) {
+	m.LoadAttackImage(am, monsterCharacter(m.Name))
 }
