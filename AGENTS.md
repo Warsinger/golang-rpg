@@ -16,5 +16,5 @@ Use Warsinger Code Builder for all GitHub interactions, not connected GitHub too
 - Keep startup configuration errors contextual and returned from loaders. Validate board bounds, object placement, stats and required assets. Preserve atomic whole-scene replacement and wrapped error causes.
 - Keep scratch files, coverage and generated executable output under ignored build/.
 - Startup/reset reads YAML configuration; Q only writes a diagnostic snapshot. Do not describe this as resume support or add persistence semantics without agreement.
-- Issue #2 tracks broader regression coverage, #4 the browser app/shared Pages deployment, and #6 the replacement font. Future browser design must explicitly address asset packaging, startup, input and save behavior; do not create Cloudflare resources or choose project names without owner coordination.
+- Maintain the deterministic gameplay regressions and CI coverage summary/artifacts added in issue #2. Issue #4 tracks the browser app/shared Pages deployment and #6 the replacement font. Future browser design must explicitly address asset packaging, startup, input and save behavior; do not create Cloudflare resources or choose project names without owner coordination.
 - Record source/author/license notices for newly added assets and retain existing notices. Missing image-pack provenance is documented, not assumed.

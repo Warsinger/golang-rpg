@@ -30,7 +30,12 @@ jobs:
         run: |
           go vet ./...
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          go test ./...
+          New-Item -ItemType Directory -Force build | Out-Null
+          go test -count=1 -covermode=atomic '-coverprofile=build/coverage.out' ./...
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          go tool cover '-func=build/coverage.out' | Tee-Object -FilePath build/coverage.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          go tool cover '-html=build/coverage.out' -o build/coverage.html
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           go build -o build/golang-rpg.exe .
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -41,3 +46,20 @@ jobs:
         run: |
           go build -o build/golang-rpg.wasm .
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Coverage summary
+        if: always() && hashFiles('build/coverage.txt') != ''
+        run: |
+          '### RPG statement coverage' | Add-Content $env:GITHUB_STEP_SUMMARY
+          '```text' | Add-Content $env:GITHUB_STEP_SUMMARY
+          Get-Content build/coverage.txt | Add-Content $env:GITHUB_STEP_SUMMARY
+          '```' | Add-Content $env:GITHUB_STEP_SUMMARY
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: rpg-coverage
+          path: |
+            build/coverage.out
+            build/coverage.txt
+            build/coverage.html
+          if-no-files-found: warn
+          retention-days: 14

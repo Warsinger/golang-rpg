@@ -47,6 +47,8 @@ type AttackInfo struct {
 
 	attackAsset Asset
 	attackFrame int
+	// randomIntN is optional and per attacker; production defaults to rand.IntN.
+	randomIntN func(int) int
 }
 type Attacker interface {
 	GetAttackPower() int
@@ -123,7 +125,11 @@ func (a *AttackInfo) GetAttackPower() int {
 
 func (a *AttackInfo) Attack(d Entity) {
 	// calculate the attackers's attack value and subtract from defender's health
-	pAttack := max((rand.IntN(a.AttackPower) + 1 - d.GetDefense()), 0)
+	roll := a.randomIntN
+	if roll == nil {
+		roll = rand.IntN
+	}
+	pAttack := max((roll(a.AttackPower) + 1 - d.GetDefense()), 0)
 	d.SetCurrentHealth(max(d.GetCurrentHealth()-pAttack, 0))
 
 	incrementFrame(&a.attackFrame, a.attackAsset)

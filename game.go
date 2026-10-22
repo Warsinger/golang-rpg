@@ -29,13 +29,37 @@ type Game interface {
 	Save() error
 }
 
+// gameInput separates keyboard sampling from one tick of game rules.
+type gameInput struct {
+	reset, quit, right, left, down, up, attack, use bool
+}
+
 func (g *GameInfo) Update() error {
-	if inpututil.IsKeyJustPressed(ebiten.KeyR) {
+	if err := g.applyInput(gameInput{
+		reset:  inpututil.IsKeyJustPressed(ebiten.KeyR),
+		quit:   inpututil.IsKeyJustPressed(ebiten.KeyQ),
+		right:  ebiten.IsKeyPressed(ebiten.KeyArrowRight),
+		left:   ebiten.IsKeyPressed(ebiten.KeyArrowLeft),
+		down:   ebiten.IsKeyPressed(ebiten.KeyArrowDown),
+		up:     ebiten.IsKeyPressed(ebiten.KeyArrowUp),
+		attack: ebiten.IsKeyPressed(ebiten.KeyA),
+		use:    inpututil.IsKeyJustPressed(ebiten.KeyU),
+	}); err != nil {
+		return err
+	}
+	if inpututil.IsKeyJustPressed(ebiten.KeyF) {
+		ebiten.SetFullscreen(!ebiten.IsFullscreen())
+	}
+	return nil
+}
+
+func (g *GameInfo) applyInput(input gameInput) error {
+	if input.reset {
 		if err := g.Init(); err != nil {
 			return fmt.Errorf("reset game: %w", err)
 		}
 	}
-	if inpututil.IsKeyJustPressed(ebiten.KeyQ) {
+	if input.quit {
 		if err := g.Save(); err != nil {
 			return fmt.Errorf("save before quit: %w", err)
 		}
@@ -43,15 +67,15 @@ func (g *GameInfo) Update() error {
 	}
 	if g.Player.Alive() {
 		// Handle input
-		if ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
+		if input.right {
 			g.Player.Move(Right, g.Board)
-		} else if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
+		} else if input.left {
 			g.Player.Move(Left, g.Board)
-		} else if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
+		} else if input.down {
 			g.Player.Move(Down, g.Board)
-		} else if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
+		} else if input.up {
 			g.Player.Move(Up, g.Board)
-		} else if ebiten.IsKeyPressed(ebiten.KeyA) {
+		} else if input.attack {
 			// TODO optimize to look for monsters in reach rather than all monsters
 			for _, m := range g.Monsters {
 				if m.Alive() && inRange(g.Player, m, 1) {
@@ -59,7 +83,7 @@ func (g *GameInfo) Update() error {
 					if !m.Alive() {
 						// remove from the board
 						g.Board.RemoveObjectFromBoard(m)
-						// if moster dies, drop some treasure
+						// If a monster dies, drop some treasure.
 						loot := m.Loot(g.Board, g.AssetManager)
 						g.Items = append(g.Items, loot)
 
@@ -71,21 +95,22 @@ func (g *GameInfo) Update() error {
 		} else {
 			g.Player.Idle()
 		}
-		if inpututil.IsKeyJustPressed(ebiten.KeyU) {
-			// TODO optimize to look for items in reach rather than all items
-			for _, i := range g.Items {
-				if i.inRange(g.Player, 1) {
-					g.Player.UseItem(i)
-					g.Board.RemoveObjectFromBoard(i)
+		if input.use {
+			remaining := g.Items[:0]
+			for _, item := range g.Items {
+				if !item.GetUsed() && item.inRange(g.Player, 1) {
+					g.Player.UseItem(item)
+				}
+				if item.GetUsed() {
+					g.Board.RemoveObjectFromBoard(item)
+				} else {
+					remaining = append(remaining, item)
 				}
 			}
+			clear(g.Items[len(remaining):])
+			g.Items = remaining
 		}
 	}
-	if inpututil.IsKeyJustPressed(ebiten.KeyF) {
-		// TODO fix focus issue when toggling full screen
-		ebiten.SetFullscreen(!ebiten.IsFullscreen())
-	}
-
 	return nil
 }
 
