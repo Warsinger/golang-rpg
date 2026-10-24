@@ -1,6 +1,6 @@
 # Configuration reference
 
-Run from the repository root. Every YAML file must contain one document, use known field names, and be at most 1 MiB. Missing files and decode failures retain their underlying error and name the file. YAML field names follow the existing lowercase Go field names; embedded structs remain nested, not flattened.
+For native runs, use the repository root. Browser builds embed the same six files; rebuild/redeploy to change the browser scene. Every YAML file must contain one document, use known field names, and be at most 1 MiB. Missing files and decode failures retain their underlying error and name the file. YAML field names follow the existing lowercase Go field names; embedded structs remain nested, not flattened.
 
 ## Files
 

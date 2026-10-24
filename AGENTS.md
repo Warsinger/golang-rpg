@@ -14,9 +14,12 @@ Use Warsinger Code Builder for all GitHub interactions, not connected GitHub too
 
 - Target the Go toolchain in go.mod. Run gofmt, relevant tests, vet and native/Wasm build checks. Standard GitHub Actions use major-version tags rather than SHAs, per owner preference.
 - Keep startup configuration errors contextual and returned from loaders. Validate board bounds, object placement, stats and required assets. Preserve atomic whole-scene replacement and wrapped error causes.
-- Keep main.go at the root, runtime/entities/tests in game/, image/font ownership in assets/, and independent helpers in internal/. Keep imports one-way (game -> assets/internal, assets -> internal/configfile).
+- Keep main.go at the root, runtime/entities/tests in game/, image/font ownership in assets/, and independent helpers in internal/. Keep imports one-way (game -> assets/internal, assets -> internal/configfile; platform may compose the browser asset/config resources without importing game).
 - For coverage across packages use -coverpkg=./...; run headless helper tests with go test ./internal/.... Test fixture locations must not change production config/assets paths.
 - Keep scratch files, coverage and generated executable output under ignored build/.
 - Startup/reset reads YAML configuration; Q only writes a diagnostic snapshot. Do not describe this as resume support or add persistence semantics without agreement.
 - Maintain the deterministic gameplay regressions and CI coverage summary/artifacts added in issue #2. Issue #4 tracks the browser app/shared Pages deployment and #6 the replacement font. Future browser design must explicitly address asset packaging, startup, input and save behavior; do not create Cloudflare resources or choose project names without owner coordination.
 - Record source/author/license notices for newly added assets and retain existing notices. Missing image-pack provenance is documented, not assumed.
+
+- Read docs/BROWSER.md and docs/DEPLOYMENT.md before browser/hosting changes. Preserve immediate startup, embedded resource sources across reset, same-origin/source/session checks, pickup latching/input release, and the first runtime-error message. Browser Q does not save/quit and no progress persistence is implemented.
+- Hosting uses the owner-created gorpg/gorpg.pages.dev main project and shared deployment workflow. Publish PR previews only by explicit manual dispatch; keep production/catalog verification separate from preview success.

@@ -2,13 +2,13 @@
 
 ## Scope
 
-An early single-player desktop RPG prototype using Go structs/interfaces and Ebitengine v2. It starts directly on a configured board. No ECS, monster AI, map progression, quest win condition, equipment system, browser launcher, or resumable save is implemented. Game design changes should be agreed with the owner before implementation.
+An early single-player desktop and browser RPG prototype using Go structs/interfaces and Ebitengine v2. It starts directly on a configured board. No ECS, monster AI, map progression, quest win condition, equipment system or resumable save is implemented. Game design changes should be agreed with the owner before implementation.
 
 ## Architecture
 
 - `main.go`: root entry point; creates the game and configures the desktop window/loop.
 - `game/`: game orchestration, board, entities, player, monsters, items, rendering/input adapters, scene validation and their regression tests. `game.New()` loads the initial scene.
-- `assets/`: image registry/loader, embedded font reader and original image/font files. This package depends on the strict reader, never on game.
+- `assets/`: image registry/loader, embedded font reader and original image/font files. This package depends on the strict reader, never on game. Its JS/Wasm build also embeds image packs.
 - `internal/configfile/`: bounded strict YAML reader and filesystem/size-limit tests; no graphics dependencies.
 - `internal/collections/`: generic FIFO queue and tests; no graphics dependencies.
 - `config/`: unchanged YAML scene files loaded from the working directory.
@@ -16,7 +16,7 @@ An early single-player desktop RPG prototype using Go structs/interfaces and Ebi
 
 Dependencies flow from main to game, from game to assets/internal helpers, and from assets to configfile. There are no reverse imports or type aliases disguising ownership. The existing entities and their rendering remain together in game because their interfaces/animation state are coupled; a future rules/renderer split can build on these boundaries without introducing ECS. Tests live beside the code they exercise.
 
-Configuration and image loading currently use working-directory files. There is one active game scene; `game.GameInfo.Load` builds a temporary scene and commits it only after every load succeeds. This prevents partial replacement on error. Individual entity loaders operate on the supplied temporary board; callers should discard that board after a failed load. Only the command entry point decides to terminate the process. The desktop Ebitengine loop currently ends on reset/save failure; there is no in-game error dialog.
+Native configuration and image loading use working-directory files. Browser configuration/images are injected from build-specific embedded filesystems; scene replacement preserves those sources. There is one active game scene; `game.GameInfo.Load` builds a temporary scene and commits it only after every load succeeds. This prevents partial replacement on error. Individual entity loaders operate on the supplied temporary board; callers should discard that board after a failed load. Only the command entry point decides to terminate the process. The desktop Ebitengine loop currently ends on reset/save failure; there is no in-game error dialog.
 
 ## Preserved rules
 
@@ -30,10 +30,12 @@ The board fills the logical scene with tiles; character frames are cropped using
 
 ## Persistence and follow-ups
 
-Q marshals exported fields to `game_state.yml`; unexported runtime fields (images, queues, occupancy) are not persisted as a resumable model. There is no reader for this snapshot, no autosave on window close, and writes are not transactional. Normal initialization always reads configuration. The browser milestone (#4) must decide save behavior explicitly.
+Q marshals exported fields to `game_state.yml`; unexported runtime fields (images, queues, occupancy) are not persisted as a resumable model. There is no reader for this snapshot, no autosave on window close, and writes are not transactional. Normal initialization always reads configuration. The browser deliberately does not write snapshots or persist progress; Q is ignored.
 
-Issue #2 adds deterministic gameplay regressions and CI coverage artifacts/summary. Issue #6 covers a replacement font. Keep rendering/input, storage and rules separable as the game expands; choose ECS only if later design calls for it. Do not claim unimplemented TODO features exist.
+Issue #2 adds deterministic gameplay regressions and CI coverage artifacts/summary. Issue #6 covers a replacement font. See BROWSER.md and DEPLOYMENT.md for the embedded browser path and release handoff. Keep rendering/input, storage and rules separable as the game expands; choose ECS only if later design calls for it. Do not claim unimplemented TODO features exist.
 
 ## Verified fix in issue #2
 
 Previously a consumed item stayed in Items and every later U press removed its old footprint again. After the player or another object moved there, that stale removal cleared the new occupant, allowing invalid overlaps. Tests reproduced both the repeated-pickup sequence and stale-object removal before the fix. Pickups now compact the active item list, clear removed references, and only remove occupancy still owned by the item. This is the intentional behavior fix; movement interpolation, progression, all-target attacks, input priority and counterattack timing remain characterized as before.
+
+The browser platform adapter merges validated on-screen held controls with keyboard input, latches pickup until a Go update, and reports ready only after a successful update. Main bypasses monitor-dependent native window setup in the browser. Browser launcher/session behavior and responsive controls do not change combat, movement interpolation or progression.

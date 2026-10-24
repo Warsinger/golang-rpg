@@ -3,9 +3,11 @@ package game
 import (
 	"fmt"
 	"image/color"
+	"io/fs"
 	"os"
 
 	"golang-rpg/assets"
+	"golang-rpg/internal/platform"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -13,16 +15,25 @@ import (
 )
 
 type GameInfo struct {
-	Board        Board
-	Player       Player
-	Monsters     []Monster
-	Items        []Item
-	AssetManager assets.AssetManager
+	Board           Board
+	Player          Player
+	Monsters        []Monster
+	Items           []Item
+	AssetManager    assets.AssetManager
+	configs, images fs.FS
 }
 
 // New loads the configured scene from the repository working directory.
 func New() (*GameInfo, error) {
-	g := &GameInfo{}
+	return NewWithResources(os.DirFS("config"), os.DirFS("assets"))
+}
+
+// NewWithResources constructs a scene without filesystem or browser globals.
+func NewWithResources(configs, images fs.FS) (*GameInfo, error) {
+	if configs == nil || images == nil {
+		return nil, fmt.Errorf("configuration and image filesystems are required")
+	}
+	g := &GameInfo{configs: configs, images: images}
 	if err := g.Init(); err != nil {
 		return nil, err
 	}
@@ -46,18 +57,20 @@ type gameInput struct {
 }
 
 func (g *GameInfo) Update() error {
+	controls := platform.Controls()
 	if err := g.applyInput(gameInput{
 		reset:  inpututil.IsKeyJustPressed(ebiten.KeyR),
-		quit:   inpututil.IsKeyJustPressed(ebiten.KeyQ),
-		right:  ebiten.IsKeyPressed(ebiten.KeyArrowRight),
-		left:   ebiten.IsKeyPressed(ebiten.KeyArrowLeft),
-		down:   ebiten.IsKeyPressed(ebiten.KeyArrowDown),
-		up:     ebiten.IsKeyPressed(ebiten.KeyArrowUp),
-		attack: ebiten.IsKeyPressed(ebiten.KeyA),
-		use:    inpututil.IsKeyJustPressed(ebiten.KeyU),
+		quit:   !platform.Browser() && inpututil.IsKeyJustPressed(ebiten.KeyQ),
+		right:  (ebiten.IsKeyPressed(ebiten.KeyArrowRight) || controls.Right),
+		left:   (ebiten.IsKeyPressed(ebiten.KeyArrowLeft) || controls.Left),
+		down:   (ebiten.IsKeyPressed(ebiten.KeyArrowDown) || controls.Down),
+		up:     (ebiten.IsKeyPressed(ebiten.KeyArrowUp) || controls.Up),
+		attack: (ebiten.IsKeyPressed(ebiten.KeyA) || controls.Attack),
+		use:    (inpututil.IsKeyJustPressed(ebiten.KeyU) || controls.Use),
 	}); err != nil {
 		return err
 	}
+	platform.Ready(g.Board.GetWidth(), g.Board.GetHeight())
 	if inpututil.IsKeyJustPressed(ebiten.KeyF) {
 		ebiten.SetFullscreen(!ebiten.IsFullscreen())
 	}
@@ -167,7 +180,14 @@ func (g *GameInfo) Save() error {
 }
 
 func (g *GameInfo) Load() error {
-	next := &GameInfo{}
+	configs, images := g.configs, g.images
+	if configs == nil {
+		configs = os.DirFS("config")
+	}
+	if images == nil {
+		images = os.DirFS("assets")
+	}
+	next := &GameInfo{configs: configs, images: images}
 	if err := next.loadScene(); err != nil {
 		return err
 	}
@@ -181,24 +201,24 @@ func (g *GameInfo) loadScene() error {
 	g.Player = nil
 
 	var err error
-	g.AssetManager, err = assets.LoadAssets()
+	g.AssetManager, err = assets.LoadAssets(g.configs, g.images)
 	if err != nil {
 		return err
 	}
 
-	g.Board, err = LoadBoard(g.AssetManager)
+	g.Board, err = LoadBoard(g.configs, g.AssetManager)
 	if err != nil {
 		return err
 	}
 	// Placements are validated against the temporary board before commit.
 
-	g.Player, err = LoadPlayer(g.Board, g.AssetManager)
+	g.Player, err = LoadPlayer(g.configs, g.Board, g.AssetManager)
 	if err != nil {
 		return err
 	}
 
 	var treasures []*TreasureInfo
-	treasures, err = LoadTreasures(g.Board, g.AssetManager)
+	treasures, err = LoadTreasures(g.configs, g.Board, g.AssetManager)
 	if err != nil {
 		return err
 	}
@@ -207,7 +227,7 @@ func (g *GameInfo) loadScene() error {
 	}
 
 	var healthPacks []*HealthPackInfo
-	healthPacks, err = LoadHealthPacks(g.Board, g.AssetManager)
+	healthPacks, err = LoadHealthPacks(g.configs, g.Board, g.AssetManager)
 	if err != nil {
 		return err
 	}
@@ -217,7 +237,7 @@ func (g *GameInfo) loadScene() error {
 	}
 
 	var monsters []*MonsterInfo
-	monsters, err = LoadMonsters(g.Board, g.AssetManager)
+	monsters, err = LoadMonsters(g.configs, g.Board, g.AssetManager)
 	if err != nil {
 		return err
 	}

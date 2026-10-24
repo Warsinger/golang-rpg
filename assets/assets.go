@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"image"
 	_ "image/png"
-	"os"
-	"path/filepath"
+	"io/fs"
+	"path"
 	"strings"
 
 	"golang-rpg/internal/configfile"
@@ -45,12 +45,12 @@ func (am *AssetManagerInfo) GetAssetInfo(name string, assetType AssetType) Asset
 	return am.assets[name][assetType]
 }
 
-func LoadAssets() (AssetManager, error) {
+func LoadAssets(configs, images fs.FS) (AssetManager, error) {
 	am := &AssetManagerInfo{}
 
 	var assets []*AssetInfo
-	if err := configfile.Read("config/assets.yml", &assets); err != nil {
-		return nil, err
+	if err := configfile.ReadFS(configs, "assets.yml", &assets); err != nil {
+		return nil, fmt.Errorf("config/assets.yml: %w", err)
 	}
 	am.assets = make(map[string]map[AssetType]Asset)
 	for index, a := range assets {
@@ -65,7 +65,7 @@ func LoadAssets() (AssetManager, error) {
 
 		}
 		am.assets[a.Name][a.Type] = a
-		err := loadImageAsset(a)
+		err := loadImageAsset(images, a)
 		if err != nil {
 			return nil, err
 		}
@@ -74,7 +74,7 @@ func LoadAssets() (AssetManager, error) {
 	return am, nil
 }
 
-func loadImageAsset(a *AssetInfo) error {
+func loadImageAsset(images fs.FS, a *AssetInfo) error {
 	var typePath string
 	switch a.Type {
 	case "walk", "attack", "death":
@@ -85,21 +85,21 @@ func loadImageAsset(a *AssetInfo) error {
 		typePath = "tiles"
 	}
 
-	path := filepath.Join("assets", typePath, a.FilePath)
-	data, err := os.ReadFile(path)
+	assetPath := path.Join(typePath, a.FilePath)
+	data, err := fs.ReadFile(images, assetPath)
 	if err != nil {
 		return fmt.Errorf("asset %q/%s: %w", a.Name, a.Type, err)
 	}
 	metadata, _, err := image.DecodeConfig(bytes.NewReader(data))
 	if err != nil {
-		return fmt.Errorf("decode asset %s: %w", path, err)
+		return fmt.Errorf("decode asset %s: %w", assetPath, err)
 	}
 	if metadata.Width > 8192 || metadata.Height > 8192 || metadata.Width*metadata.Height > 16_000_000 {
-		return fmt.Errorf("asset %s: image must stay within 8192 pixels per dimension and 16000000 pixels total", path)
+		return fmt.Errorf("asset %s: image must stay within 8192 pixels per dimension and 16000000 pixels total", assetPath)
 	}
 	img, _, err := image.Decode(bytes.NewReader(data))
 	if err != nil {
-		return fmt.Errorf("load asset %s: %w", path, err)
+		return fmt.Errorf("load asset %s: %w", assetPath, err)
 	}
 
 	a.image = ebiten.NewImageFromImage(img)

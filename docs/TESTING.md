@@ -10,7 +10,7 @@ go test -count=1 ./...
 go build -o build/golang-rpg .
 ```
 
-Windows: name the output build/golang-rpg.exe. Native tests import Ebitengine and create images, so Linux requires graphics development libraries plus a display or Xvfb. See the Ebitengine install guide in README. Windows is the current CI host. Game and asset tests remain graphics-linked, but the internal YAML/queue helpers can be tested without graphics using `go test ./internal/...`. Test files live beside their owning packages. The root has the executable entry point and no tests; run `go test ./...`, not just `go test`.
+Windows: name the output build/golang-rpg.exe. Native game/asset tests import Ebitengine and create images, so Linux requires graphics development libraries plus a display or Xvfb. See the Ebitengine install guide in README. Windows is the current CI host. Game and asset tests remain graphics-linked, but the internal YAML/queue helpers can be tested without graphics using `go test ./internal/...`. Test files live beside their owning packages. The root has the executable entry point and no tests; run `go test ./...`, not just `go test`.
 
 ## Coverage
 
@@ -52,7 +52,7 @@ $env:GOARCH = 'wasm'
 try { go build -o build/golang-rpg.wasm . } finally { Remove-Item Env:GOOS; Remove-Item Env:GOARCH }
 ```
 
-Compilation is not browser readiness: configuration/assets currently come from the working directory and there is no browser launcher. Issue #4 owns that implementation.
+For the complete browser bundle, run go run ./cmd/web, node --test scripts/*.test.mjs, and node scripts/package-pages.mjs <fresh-directory>. The browser job runs on Linux without native Ebitengine graphics initialization: it builds the game for JS/Wasm rather than executing the native game. Configuration/images are embedded for that build. See BROWSER.md for actual browser verification and remaining device limits.
 
 ## Manual checklist and limits
 
@@ -64,4 +64,8 @@ Scene test fixtures copy the repository-level config/assets directories into a t
 
 The automated startup scene smoke test decodes actual assets and creates Ebitengine images, but does not run the interactive render/input loop. Manual graphics, keyboard/fullscreen and real-device behavior have not been verified for this PR. Existing interpolation asymmetry, ignored Draw-return errors, multi-target combat ordering and progression quirks remain future work; the stale pickup occupancy bug is fixed and covered.
 
-To check test isolation locally, run go test -shuffle=on -count=3 ./... (or retain a reported shuffle seed to reproduce an ordering failure). This was run successfully in addition to the coverage suite. Native/Wasm compilation remains separate from interactive device checks.
+To check test isolation locally, run go test -shuffle=on -count=3 ./... (or retain a reported shuffle seed to reproduce an ordering failure). This was run successfully in addition to the coverage suite. Native/Wasm compilation remains separate from interactive device checks. Browser checks for this change were performed in Chromium and are documented in BROWSER.md.
+
+Resource-injection regressions initialize/reset a real configured scene from in-memory filesystems in an empty working directory, and verify a failed resource reload preserves active state. Native startup/config/save tests remain in place.
+
+The browser milestone adds an unexercised native build/server command and platform adapters; current native statement coverage is 64.3%. Browser JavaScript has its own behavioral tests, and browser-only Go resource/control code is validated by the actual Chromium bundle checks rather than included in the Windows coverage percentage.

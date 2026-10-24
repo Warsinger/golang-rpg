@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="An early Go RPG: explore the board, fight monsters and collect loot."><title>Go RPG</title><link rel="stylesheet" href="styles.css"><script type="module" src="launcher.js"></script></head>
+<body><header><h1>Go RPG</h1><p>A little adventure, still growing.</p></header>
+<main><section class="stage" aria-label="RPG game"><div class="screen"><iframe id="game" data-src="game.html" title="Go RPG playfield" allow="autoplay; fullscreen" tabindex="0"></iframe></div>
+<div class="toolbar"><button id="focus" type="button">Focus game</button><button id="fullscreen" type="button">Fullscreen</button><button id="restart" type="button">Restart scene</button></div>
+<p id="status" role="status" aria-live="polite">Loading…</p>
+<div class="controls" aria-label="Game controls"><div class="directions"><button data-control="up" aria-label="Move up">↑</button><button data-control="left" aria-label="Move left">←</button><button data-control="down" aria-label="Move down">↓</button><button data-control="right" aria-label="Move right">→</button></div><div class="actions"><button data-control="attack">Attack · A</button><button data-control="use">Pick up · U</button></div></div>
+<p class="keys"><strong>Arrows</strong> move · <strong>A</strong> attack · <strong>U</strong> pick up · <strong>R</strong> restart · <strong>F</strong> fullscreen</p><p class="hint">Attacks reach adjacent monsters, including diagonals. Use fullscreen for a larger view. Progress is not saved; restart restores the original scene.</p>
+</section></main>
+<footer><a href="https://eelwehttam.pages.dev/">All apps</a> · <a href="https://github.com/Warsinger/golang-rpg">Source</a> · <a href="https://github.com/Warsinger/golang-rpg/issues">Report an issue</a></footer><noscript>This game requires JavaScript and WebAssembly.</noscript></body></html>
