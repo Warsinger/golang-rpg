@@ -1,8 +1,11 @@
-package main
+package game
 
 import (
 	"image"
 	"testing"
+
+	"golang-rpg/assets"
+	"golang-rpg/internal/collections"
 )
 
 func TestRectangularBoardCoordinatesAndFootprints(t *testing.T) {
@@ -89,14 +92,14 @@ func TestRangeAcrossDiagonalAndLargeFootprintEdges(t *testing.T) {
 
 func TestAnimationAndEmptyQueueBoundaries(t *testing.T) {
 	frame := 0
-	asset := &AssetInfo{FrameCount: 3}
+	asset := &assets.AssetInfo{FrameCount: 3}
 	for _, want := range []int{1, 2, 0, 1} {
 		incrementFrame(&frame, asset)
 		if frame != want {
 			t.Fatalf("frame %d want %d", frame, want)
 		}
 	}
-	queue := NewQueue[image.Point]()
+	queue := collections.NewQueue[image.Point]()
 	if point, ok := queue.TryDequeue(); ok || point != (image.Point{}) {
 		t.Fatal("empty queue must return zero/false")
 	}

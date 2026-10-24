@@ -1,8 +1,10 @@
-package main
+package game
 
 import (
 	"fmt"
 	"math/rand/v2"
+
+	"golang-rpg/assets"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -45,7 +47,7 @@ type Entity interface {
 type AttackInfo struct {
 	AttackPower int
 
-	attackAsset Asset
+	attackAsset assets.Asset
 	attackFrame int
 	// randomIntN is optional and per attacker; production defaults to rand.IntN.
 	randomIntN func(int) int
@@ -135,6 +137,6 @@ func (a *AttackInfo) Attack(d Entity) {
 	incrementFrame(&a.attackFrame, a.attackAsset)
 }
 
-func (a *AttackInfo) LoadAttackImage(am AssetManager, name string) {
+func (a *AttackInfo) LoadAttackImage(am assets.AssetManager, name string) {
 	a.attackAsset = am.GetAssetInfo(name, "attack")
 }

@@ -1,9 +1,12 @@
-package main
+package game
 
 import (
 	"fmt"
 	"image"
 	"image/color"
+
+	"golang-rpg/assets"
+	"golang-rpg/internal/configfile"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -15,7 +18,7 @@ type ItemInfo struct {
 	Value int
 	Used  bool
 
-	asset Asset
+	asset assets.Asset
 }
 
 type Item interface {
@@ -23,7 +26,7 @@ type Item interface {
 
 	Draw(screen *ebiten.Image, b Board) error
 	Select(screen *ebiten.Image, b Board) error
-	GetAsset() Asset
+	GetAsset() assets.Asset
 
 	GetValue() int
 	GetUsed() bool
@@ -116,7 +119,7 @@ func drawInfo(screen *ebiten.Image, i Item, x, y float32) {
 	text.Draw(screen, infoText, mplusNormalFace, op)
 }
 
-func (i *ItemInfo) GetAsset() Asset {
+func (i *ItemInfo) GetAsset() assets.Asset {
 	return i.asset
 }
 
@@ -132,7 +135,7 @@ func (i *ItemInfo) Select(screen *ebiten.Image, b Board) error {
 	return nil
 }
 
-func NewTreasure(b Board, am AssetManager, gold, x, y, size int) *TreasureInfo {
+func NewTreasure(b Board, am assets.AssetManager, gold, x, y, size int) *TreasureInfo {
 	t := &TreasureInfo{ItemInfo: ItemInfo{Value: gold, ObjectInfo: ObjectInfo{x, y, size}}}
 	b.AddObjectToBoard(t)
 
@@ -141,9 +144,9 @@ func NewTreasure(b Board, am AssetManager, gold, x, y, size int) *TreasureInfo {
 	return t
 }
 
-func LoadTreasures(b Board, am AssetManager) ([]*TreasureInfo, error) {
+func LoadTreasures(b Board, am assets.AssetManager) ([]*TreasureInfo, error) {
 	var treasures []*TreasureInfo
-	if err := readConfig("config/treasures.yml", &treasures); err != nil {
+	if err := configfile.Read("config/treasures.yml", &treasures); err != nil {
 		return nil, err
 	}
 	if err := requiredAsset(am, "Treasure", "item", b.GetGridSize(), "config/treasures.yml"); err != nil {
@@ -168,9 +171,9 @@ func LoadTreasures(b Board, am AssetManager) ([]*TreasureInfo, error) {
 	return treasures, nil
 }
 
-func LoadHealthPacks(b Board, am AssetManager) ([]*HealthPackInfo, error) {
+func LoadHealthPacks(b Board, am assets.AssetManager) ([]*HealthPackInfo, error) {
 	var healthPacks []*HealthPackInfo
-	if err := readConfig("config/healthpacks.yml", &healthPacks); err != nil {
+	if err := configfile.Read("config/healthpacks.yml", &healthPacks); err != nil {
 		return nil, err
 	}
 	if err := requiredAsset(am, "HealthPack", "item", b.GetGridSize(), "config/healthpacks.yml"); err != nil {
@@ -194,6 +197,6 @@ func LoadHealthPacks(b Board, am AssetManager) ([]*HealthPackInfo, error) {
 	return healthPacks, nil
 }
 
-func (i *ItemInfo) LoadImages(am AssetManager, name string) {
+func (i *ItemInfo) LoadImages(am assets.AssetManager, name string) {
 	i.asset = am.GetAssetInfo(name, "item")
 }

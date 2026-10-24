@@ -1,7 +1,10 @@
-package main
+package game
 
 import (
 	"fmt"
+
+	"golang-rpg/assets"
+	"golang-rpg/internal/configfile"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -12,7 +15,7 @@ type BoardInfo struct {
 	GridSize   int
 	TileSet    string
 	occupied   []Object
-	boardAsset Asset
+	boardAsset assets.Asset
 }
 
 type Board interface {
@@ -30,9 +33,9 @@ type Board interface {
 	Draw(screen *ebiten.Image)
 }
 
-func LoadBoard(am AssetManager) (Board, error) {
+func LoadBoard(am assets.AssetManager) (Board, error) {
 	var board BoardInfo
-	if err := readConfig("config/board.yml", &board); err != nil {
+	if err := configfile.Read("config/board.yml", &board); err != nil {
 		return nil, err
 	}
 	if err := validateBoard(&board); err != nil {
@@ -47,7 +50,7 @@ func LoadBoard(am AssetManager) (Board, error) {
 	return &board, nil
 }
 
-func (b *BoardInfo) LoadImages(am AssetManager) {
+func (b *BoardInfo) LoadImages(am assets.AssetManager) {
 	b.boardAsset = am.GetAssetInfo(b.TileSet, "tile")
 }
 

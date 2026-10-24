@@ -1,6 +1,10 @@
-package main
+package game
 
-import "testing"
+import (
+	"testing"
+
+	"golang-rpg/assets"
+)
 
 func TestDeterministicDamageDefenseAndAnimation(t *testing.T) {
 	for _, test := range []struct {
@@ -16,7 +20,7 @@ func TestDeterministicDamageDefenseAndAnimation(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			calls := 0
-			a := AttackInfo{AttackPower: test.power, attackAsset: &AssetInfo{FrameCount: 3}, randomIntN: func(n int) int {
+			a := AttackInfo{AttackPower: test.power, attackAsset: &assets.AssetInfo{FrameCount: 3}, randomIntN: func(n int) int {
 				calls++
 				if n != test.power {
 					t.Fatalf("random bound %d, want %d", n, test.power)
@@ -31,8 +35,8 @@ func TestDeterministicDamageDefenseAndAnimation(t *testing.T) {
 		})
 	}
 	t.Run("random hooks belong to each attacker", func(t *testing.T) {
-		low := AttackInfo{AttackPower: 6, attackAsset: &AssetInfo{FrameCount: 3}, randomIntN: func(int) int { return 0 }}
-		high := AttackInfo{AttackPower: 6, attackAsset: &AssetInfo{FrameCount: 3}, randomIntN: func(n int) int { return n - 1 }}
+		low := AttackInfo{AttackPower: 6, attackAsset: &assets.AssetInfo{FrameCount: 3}, randomIntN: func(int) int { return 0 }}
+		high := AttackInfo{AttackPower: 6, attackAsset: &assets.AssetInfo{FrameCount: 3}, randomIntN: func(n int) int { return n - 1 }}
 		target := &EntityInfo{CurrentHealth: 20}
 		low.Attack(target)
 		high.Attack(target)
@@ -42,7 +46,7 @@ func TestDeterministicDamageDefenseAndAnimation(t *testing.T) {
 		}
 	})
 	t.Run("default random roll retains production bounds", func(t *testing.T) {
-		a := AttackInfo{AttackPower: 1, attackAsset: &AssetInfo{FrameCount: 1}}
+		a := AttackInfo{AttackPower: 1, attackAsset: &assets.AssetInfo{FrameCount: 1}}
 		target := &EntityInfo{CurrentHealth: 2}
 		a.Attack(target)
 		if target.CurrentHealth != 1 || a.attackFrame != 0 {

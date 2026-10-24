@@ -1,5 +1,7 @@
 # Asset inventory and attribution
 
+The Go asset registry and embedded font reader live alongside the resource files in `assets/assets.go` and `assets/fonts.go`. `game/` consumes that package through its asset lookup interface; the registry has no dependency on the game. Image files still load from the repository working directory; only the font is embedded.
+
 The owner originally selected freely available image packs. This repository does not record enough provenance to identify their authors, original download links, or license terms reliably. Do not infer a license from filenames or claim that availability grants commercial redistribution rights. Preserve the current art during this documentation/startup change; identifying its original licenses remains follow-up work before expanding distribution.
 
 | Files | Current use | Provenance status |

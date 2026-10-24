@@ -1,9 +1,13 @@
-package main
+package game
 
 import (
 	"fmt"
 	"image"
 	"image/color"
+
+	"golang-rpg/assets"
+	"golang-rpg/internal/collections"
+	"golang-rpg/internal/configfile"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -19,13 +23,13 @@ type PlayerInfo struct {
 	Level      int
 	Character  string
 
-	walkAsset Asset
+	walkAsset assets.Asset
 	walkFrame int
 
-	deathAsset Asset
+	deathAsset assets.Asset
 
 	animState AnimState
-	moveQueue *Queue[image.Point]
+	moveQueue *collections.Queue[image.Point]
 }
 
 type Player interface {
@@ -43,13 +47,13 @@ type Player interface {
 	EnqueueMove(pt *image.Point)
 	DequeueMove() *image.Point
 	Idle()
-	LoadImages(am AssetManager)
+	LoadImages(am assets.AssetManager)
 	UseItem(i Item)
 }
 
-func LoadPlayer(b Board, am AssetManager) (Player, error) {
+func LoadPlayer(b Board, am assets.AssetManager) (Player, error) {
 	var player PlayerInfo
-	if err := readConfig("config/player.yml", &player); err != nil {
+	if err := configfile.Read("config/player.yml", &player); err != nil {
 		return nil, err
 	}
 
@@ -62,7 +66,7 @@ func LoadPlayer(b Board, am AssetManager) (Player, error) {
 	if err := validatePlacement(b, &player, "config/player.yml"); err != nil {
 		return nil, err
 	}
-	for _, kind := range []AssetType{"walk", "attack", "death"} {
+	for _, kind := range []assets.AssetType{"walk", "attack", "death"} {
 		if err := requiredAsset(am, player.Character, kind, b.GetGridSize(), "config/player.yml"); err != nil {
 			return nil, err
 		}
@@ -70,7 +74,7 @@ func LoadPlayer(b Board, am AssetManager) (Player, error) {
 	b.AddObjectToBoard(&player)
 
 	player.LoadImages(am)
-	player.moveQueue = NewQueue[image.Point]()
+	player.moveQueue = collections.NewQueue[image.Point]()
 
 	return &player, nil
 }
@@ -255,7 +259,7 @@ func (p *PlayerInfo) GetLevel() int {
 	return p.Level
 }
 
-func (p *PlayerInfo) LoadImages(am AssetManager) {
+func (p *PlayerInfo) LoadImages(am assets.AssetManager) {
 	p.walkAsset = am.GetAssetInfo(p.Character, "walk")
 	p.deathAsset = am.GetAssetInfo(p.Character, "death")
 

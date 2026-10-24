@@ -6,18 +6,17 @@ An early single-player desktop RPG prototype using Go structs/interfaces and Ebi
 
 ## Architecture
 
-- `main.go`: terminal startup/errors, monitor-scaled undecorated window and 15-TPS game loop.
-- `game.go`: keyboard sampling, testable per-tick input/rules, scene drawing, reset/load and diagnostic save.
-- `config.go`: bounded strict YAML reading, dimensions/stats/placement and required-sprite validation.
-- `assets.go`: manifest, name/type lookup, bounded image decode and Ebitengine image creation.
-- `board.go`: column-major occupancy (`x*GridHeight+y`), collision checks, coordinates and tile rendering.
-- `entity.go`: object footprint, health/gold and randomized attack/counterattack primitives.
-- `player.go`: movement queue, drawing, character animation, experience and item use.
-- `monster.go`: stationary monster rendering, attack sprite selection and treasure drops.
-- `item.go`: treasure/health use flags and drawing.
-- `util.go`, `fonts.go`: range/math/queue helpers and embedded legacy font.
+- `main.go`: root entry point; creates the game and configures the desktop window/loop.
+- `game/`: game orchestration, board, entities, player, monsters, items, rendering/input adapters, scene validation and their regression tests. `game.New()` loads the initial scene.
+- `assets/`: image registry/loader, embedded font reader and original image/font files. This package depends on the strict reader, never on game.
+- `internal/configfile/`: bounded strict YAML reader and filesystem/size-limit tests; no graphics dependencies.
+- `internal/collections/`: generic FIFO queue and tests; no graphics dependencies.
+- `config/`: unchanged YAML scene files loaded from the working directory.
+- `docs/`: project, configuration, coding, testing and asset provenance guides.
 
-Configuration and image loading currently use working-directory files. There is one active game scene; `GameInfo.Load` builds a temporary scene and commits it only after every load succeeds. This prevents partial replacement on error. Individual entity loaders operate on the supplied temporary board; callers should discard that board after a failed load. Only the command entry point decides to terminate the process. The desktop Ebitengine loop currently ends on reset/save failure; there is no in-game error dialog.
+Dependencies flow from main to game, from game to assets/internal helpers, and from assets to configfile. There are no reverse imports or type aliases disguising ownership. The existing entities and their rendering remain together in game because their interfaces/animation state are coupled; a future rules/renderer split can build on these boundaries without introducing ECS. Tests live beside the code they exercise.
+
+Configuration and image loading currently use working-directory files. There is one active game scene; `game.GameInfo.Load` builds a temporary scene and commits it only after every load succeeds. This prevents partial replacement on error. Individual entity loaders operate on the supplied temporary board; callers should discard that board after a failed load. Only the command entry point decides to terminate the process. The desktop Ebitengine loop currently ends on reset/save failure; there is no in-game error dialog.
 
 ## Preserved rules
 
