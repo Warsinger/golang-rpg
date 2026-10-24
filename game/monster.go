@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"io/fs"
 	"strings"
 
 	"golang-rpg/assets"
-	"golang-rpg/internal/configfile"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
@@ -66,9 +66,9 @@ func (m *MonsterInfo) Loot(b Board, am assets.AssetManager) Item {
 	return NewTreasure(b, am, m.Gold, m.GridX, m.GridY, m.Size)
 }
 
-func LoadMonsters(b Board, am assets.AssetManager) ([]*MonsterInfo, error) {
+func LoadMonsters(configs fs.FS, b Board, am assets.AssetManager) ([]*MonsterInfo, error) {
 	var monsters []*MonsterInfo
-	if err := configfile.Read("config/monsters.yml", &monsters); err != nil {
+	if err := readSceneConfig(configs, "monsters.yml", &monsters); err != nil {
 		return nil, err
 	}
 

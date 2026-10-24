@@ -2,9 +2,11 @@ package game
 
 import (
 	"fmt"
+	"io/fs"
 	"strings"
 
 	"golang-rpg/assets"
+	"golang-rpg/internal/configfile"
 )
 
 func validateBoard(b *BoardInfo) error {
@@ -51,6 +53,13 @@ func requiredAsset(am assets.AssetManager, name string, kind assets.AssetType, g
 		if a.GetFrameCount() <= 0 || gridSize > bounds.Dy() || gridSize > bounds.Dx()/a.GetFrameCount() {
 			return fmt.Errorf("%s: asset %q/%s is too small for %d frames of %d-pixel cells", context, name, kind, a.GetFrameCount(), gridSize)
 		}
+	}
+	return nil
+}
+
+func readSceneConfig(source fs.FS, name string, value any) error {
+	if err := configfile.ReadFS(source, name, value); err != nil {
+		return fmt.Errorf("config/%s: %w", name, err)
 	}
 	return nil
 }

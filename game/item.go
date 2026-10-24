@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"io/fs"
 
 	"golang-rpg/assets"
-	"golang-rpg/internal/configfile"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -144,9 +144,9 @@ func NewTreasure(b Board, am assets.AssetManager, gold, x, y, size int) *Treasur
 	return t
 }
 
-func LoadTreasures(b Board, am assets.AssetManager) ([]*TreasureInfo, error) {
+func LoadTreasures(configs fs.FS, b Board, am assets.AssetManager) ([]*TreasureInfo, error) {
 	var treasures []*TreasureInfo
-	if err := configfile.Read("config/treasures.yml", &treasures); err != nil {
+	if err := readSceneConfig(configs, "treasures.yml", &treasures); err != nil {
 		return nil, err
 	}
 	if err := requiredAsset(am, "Treasure", "item", b.GetGridSize(), "config/treasures.yml"); err != nil {
@@ -171,9 +171,9 @@ func LoadTreasures(b Board, am assets.AssetManager) ([]*TreasureInfo, error) {
 	return treasures, nil
 }
 
-func LoadHealthPacks(b Board, am assets.AssetManager) ([]*HealthPackInfo, error) {
+func LoadHealthPacks(configs fs.FS, b Board, am assets.AssetManager) ([]*HealthPackInfo, error) {
 	var healthPacks []*HealthPackInfo
-	if err := configfile.Read("config/healthpacks.yml", &healthPacks); err != nil {
+	if err := readSceneConfig(configs, "healthpacks.yml", &healthPacks); err != nil {
 		return nil, err
 	}
 	if err := requiredAsset(am, "HealthPack", "item", b.GetGridSize(), "config/healthpacks.yml"); err != nil {

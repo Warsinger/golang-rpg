@@ -2,9 +2,9 @@ package game
 
 import (
 	"fmt"
+	"io/fs"
 
 	"golang-rpg/assets"
-	"golang-rpg/internal/configfile"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -33,9 +33,9 @@ type Board interface {
 	Draw(screen *ebiten.Image)
 }
 
-func LoadBoard(am assets.AssetManager) (Board, error) {
+func LoadBoard(configs fs.FS, am assets.AssetManager) (Board, error) {
 	var board BoardInfo
-	if err := configfile.Read("config/board.yml", &board); err != nil {
+	if err := readSceneConfig(configs, "board.yml", &board); err != nil {
 		return nil, err
 	}
 	if err := validateBoard(&board); err != nil {

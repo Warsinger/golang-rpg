@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"io/fs"
 
 	"golang-rpg/assets"
 	"golang-rpg/internal/collections"
-	"golang-rpg/internal/configfile"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
@@ -51,9 +51,9 @@ type Player interface {
 	UseItem(i Item)
 }
 
-func LoadPlayer(b Board, am assets.AssetManager) (Player, error) {
+func LoadPlayer(configs fs.FS, b Board, am assets.AssetManager) (Player, error) {
 	var player PlayerInfo
-	if err := configfile.Read("config/player.yml", &player); err != nil {
+	if err := readSceneConfig(configs, "player.yml", &player); err != nil {
 		return nil, err
 	}
 

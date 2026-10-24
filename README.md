@@ -36,7 +36,7 @@ Reach is measured on the grid, including diagonals and an object's footprint. Go
 
 Edit the files under `config/` to change the board, player, placed monsters/items and image manifest. Keep the existing nested `entityinfo`, `objectinfo`, `attackinfo` and `iteminfo` structure. See the [configuration reference](docs/CONFIGURATION.md) for fields, limits and examples.
 
-Missing files, invalid YAML/fields, unsafe board dimensions, invalid stats, missing sprites and overlapping/off-board objects produce contextual errors. Start the executable from the repository root if it reports a missing configuration file. A built executable still needs the adjacent `config/` and `assets/` directories in its **working directory**; resources other than the font are not embedded yet.
+Missing files, invalid YAML/fields, unsafe board dimensions, invalid stats, missing sprites and overlapping/off-board objects produce contextual errors. Start the executable from the repository root if it reports a missing configuration file. A built executable still needs the adjacent `config/` and `assets/` directories in its **working directory**; native resources other than the font are not embedded. The browser build embeds its own copy.
 
 Startup/reset failures are returned to the application entry point and reported in the terminal instead of panicking inside a loader. A failed scene load never replaces the existing scene, although the current desktop loop exits on a reset error. Correct the named file and relaunch. Q save failures also end the loop with an error.
 
@@ -50,15 +50,13 @@ go test ./...
 go build -o build/golang-rpg .
 ```
 
-Use `build/golang-rpg.exe` for a Windows output name. CI runs on Windows and also checks WebAssembly compilation. See [testing and manual checks](docs/TESTING.md), [coding standards](docs/CODING_STANDARDS.md), [architecture/current rules](docs/PROJECT_SPEC.md) and [contributor instructions](AGENTS.md).
+Use `build/golang-rpg.exe` for a Windows output name. CI runs native/coverage checks on Windows and browser tests/bundling on Linux. See [testing and manual checks](docs/TESTING.md), [coding standards](docs/CODING_STANDARDS.md), [architecture/current rules](docs/PROJECT_SPEC.md) and [contributor instructions](AGENTS.md).
 
-A low-level Wasm compile is available:
+## Browser version
 
-```sh
-GOOS=js GOARCH=wasm go build -o build/golang-rpg.wasm .
-```
+Run `go run ./cmd/web -serve -port 8080` and open [localhost:8080](http://localhost:8080/). The game starts immediately with embedded configuration/images, automatic canvas focus, keyboard and on-screen controls, restart and fullscreen. Browser progress is not saved; Q is ignored and restart restores the initial scene. Native file loading and diagnostic saving stay as described above.
 
-For PowerShell, set `$env:GOOS = 'js'` and `$env:GOARCH = 'wasm'` before building, then remove both variables. This is **not yet a playable browser version**: resource packaging/loading, input, lifecycle, save behavior, hosting and deployment are tracked in [#4](https://github.com/Warsinger/golang-rpg/issues/4).
+The owner-provisioned deployment target is [gorpg.pages.dev](https://gorpg.pages.dev/). Production becomes available after merge and successful main publication; use the PR preview beforehand. See [browser behavior and device limits](docs/BROWSER.md) and [deployment/preview instructions](docs/DEPLOYMENT.md).
 
 ## Assets
 

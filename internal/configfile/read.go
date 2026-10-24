@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"strings"
 
@@ -13,7 +14,12 @@ import (
 
 // Read accepts one strict YAML document and keeps filesystem failures wrapped.
 func Read(path string, value any) error {
-	f, err := os.Open(path)
+	return ReadFS(os.DirFS("."), path, value)
+}
+
+// ReadFS reads the same strict configuration from an injected filesystem.
+func ReadFS(source fs.FS, path string, value any) error {
+	f, err := source.Open(path)
 	if err != nil {
 		return fmt.Errorf("read %s: %w (run from the repository root)", path, err)
 	}
