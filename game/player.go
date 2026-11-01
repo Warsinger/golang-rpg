@@ -28,8 +28,10 @@ type PlayerInfo struct {
 
 	deathAsset assets.Asset
 
-	animState AnimState
-	moveQueue *collections.Queue[image.Point]
+	// facingLeft is runtime-only; the source sheets and a fresh scene face right.
+	facingLeft bool
+	animState  AnimState
+	moveQueue  *collections.Queue[image.Point]
 }
 
 type Player interface {
@@ -109,10 +111,8 @@ func (p *PlayerInfo) Draw(screen *ebiten.Image, b Board) error {
 	r := float32(p.Size*b.GetGridSize()) / 2
 	vector.DrawFilledCircle(screen, cx, cy, r, c, true)
 
-	size := float64(p.GetSize())
 	opts := &ebiten.DrawImageOptions{}
-	opts.GeoM.Translate(float64(x)/size, float64(y)/size)
-	opts.GeoM.Scale(size, size)
+	opts.GeoM = p.spriteTransform(x, y, b.GetGridSize())
 
 	frame := 0
 	img := p.walkAsset.GetImage()
@@ -139,6 +139,20 @@ func (p *PlayerInfo) Draw(screen *ebiten.Image, b Board) error {
 
 	p.DrawInfo(screen, 4, 4)
 	return nil
+}
+
+// spriteTransform mirrors one cropped frame inside its existing footprint.
+// Apply the reflection before world scaling/translation so position and HUD stay put.
+func (p *PlayerInfo) spriteTransform(x, y float32, frameWidth int) ebiten.GeoM {
+	var transform ebiten.GeoM
+	if p.facingLeft {
+		transform.Scale(-1, 1)
+		transform.Translate(float64(frameWidth), 0)
+	}
+	size := float64(p.GetSize())
+	transform.Scale(size, size)
+	transform.Translate(float64(x), float64(y))
+	return transform
 }
 
 func (p *PlayerInfo) AttackMonster(m Monster) {
@@ -200,6 +214,12 @@ func (p *PlayerInfo) Move(direction Direction, b Board) bool {
 	p.animState = "walk"
 
 	if b.CanOccupySpace(p, gx, gy) {
+		switch direction {
+		case Left:
+			p.facingLeft = true
+		case Right:
+			p.facingLeft = false
+		}
 		// queue up several coordinates between old and new to draw intermeiate frames
 		p.queuePoints(p.GridX, p.GridY, gx, gy, b)
 

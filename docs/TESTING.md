@@ -87,3 +87,21 @@ Text still becomes small when the entire board is scaled down; this change does
 not redesign mobile labels. Arbitrary user-configured Unicode names are not
 promised by the ASCII coverage test. Interactive native-window rendering,
 Safari/Firefox and physical mobile devices were not checked for this change.
+
+
+## Player facing (issue #12)
+
+Facing regressions cover successful left/right changes, vertical/idle/attack/pickup/
+death retention, boundaries/collisions, ignored turns while interpolation drains,
+and reset using the shipped configuration. Transform checks cover both directions,
+cell corners/center, fractional world origins and sizes 1..3 so mirroring cannot
+shift the selected frame outside its original scaled footprint. Existing movement
+queue timing and left/up interpolation behavior remain unchanged.
+
+Chromium checks used the actual Wasm game at its 1920x1440 logical resolution and
+at launcher scale: keyboard and page direction controls flip the player in place,
+including at the left board edge, and the HUD/background are not mirrored.
+[After moving left](facing-left.jpg) and [after moving right](facing-right.jpg)
+show cropped captures of the actual playfield. State regressions cover retained
+attack/death facing; those animations were not separately inspected interactively.
+Native interactive rendering and other browsers/devices were not checked.

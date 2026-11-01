@@ -28,6 +28,8 @@ The shipped board is 40 × 30 cells of 48 pixels, rendered at 1920 × 1440 logic
 | F | Toggle fullscreen |
 | Q | Write `game_state.yml`, then quit |
 
+The player faces left or right after a successful horizontal move and keeps that facing while moving vertically, idle, attacking or dead. Blocked moves do not turn the sprite; restart restores its original right-facing pose.
+
 Reach is measured on the grid, including diagonals and an object's footprint. Gold and health pickups apply once and are removed from the scene; their former cells become available for movement. Killed monsters drop treasure and award experience. Attacks already roll random damage; damage cannot drop health below zero. Level changes increase attack power using the existing progression logic.
 
 **Saving does not currently resume a game.** Q writes a diagnostic YAML snapshot in the working directory; startup and R always read the six configuration files, never `game_state.yml`. Closing the window does not call this save path. Save failures are reported rather than silently discarded. Do not rely on the snapshot as durable progress storage.
