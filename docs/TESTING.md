@@ -124,5 +124,3 @@ used held keyboard and on-screen buttons in all directions, reversal, blocked
 movement, retained facing and reset. Native interactive rendering, real mobile
 devices and other browsers were not checked for this fix.
 Local cross-package coverage after this fix is 69.8%; coverage remains informational.
-[Chromium build after reset](movement-check.jpg) records the tested playfield;
-movement timing is asserted by update-count regressions rather than a still image.
