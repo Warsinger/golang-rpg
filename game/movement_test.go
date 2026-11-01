@@ -2,10 +2,12 @@ package game
 
 import (
 	"fmt"
-	"github.com/hajimehoshi/ebiten/v2"
-	"golang-rpg/assets"
 	"image"
 	"testing"
+
+	"golang-rpg/assets"
+
+	"github.com/hajimehoshi/ebiten/v2"
 )
 
 func TestMovementInterpolationInEveryDirection(t *testing.T) {
