@@ -5,7 +5,7 @@ import { gzipSync } from 'node:zlib';
 import { pathToFileURL } from 'node:url';
 
 export function packagePages(source, destination, revision = 'local') {
-  const names = ['game.html','launcher.js','game.js','styles.css','wasm_exec.js','game.wasm'];
+  const names = ['game.html','launcher.js','game.js','styles.css','wasm_exec.js','game.wasm','font-license.txt'];
   const files = new Map(names.map(name => [name, fs.readFileSync(path.join(source,name))]));
   files.set('game.wasm.gz',gzipSync(files.get('game.wasm'),{level:9}));
   files.delete('game.wasm');
@@ -19,7 +19,7 @@ export function packagePages(source, destination, revision = 'local') {
   }
   const hash = digest.digest('hex');
   let index = fs.readFileSync(path.join(source,'index.html'),'utf8');
-  for (const name of ['game.html','launcher.js','styles.css']) {
+  for (const name of ['game.html','launcher.js','styles.css','font-license.txt']) {
     if (!index.includes('"'+name+'"')) throw new Error(name + ' index reference missing');
     index = index.replaceAll('"'+name+'"','"assets/'+hash+'/'+name+'"');
   }

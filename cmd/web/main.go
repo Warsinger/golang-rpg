@@ -63,6 +63,9 @@ func build() error {
 			return err
 		}
 	}
+	if err := copyFile("assets/fonts/OFL.txt", "build/web/font-license.txt"); err != nil {
+		return err
+	}
 	return nil
 }
 

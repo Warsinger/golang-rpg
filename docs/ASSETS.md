@@ -11,8 +11,8 @@ The owner originally selected freely available image packs. This repository does
 | `assets/items/{chest,heart}.png` | Treasure and health packs | Source/author/license not recorded |
 | `assets/tiles/{Swamp,StoneField}.png` | Board tiles | Source/author/license not recorded |
 | `docs/gameplay*.png` | Historical gameplay screenshots | Contain the same game artwork |
-| `assets/fonts/arcade_n.ttf` | Existing pixel font | Yuji Adachi, copied unchanged from Ebitengine v1.12.12's resource |
+| `assets/fonts/pressstart2p.ttf` | Pixel font for player, monster and item labels | Cody Boisclair; unchanged Ebitengine v2.10.5 resource, SIL OFL 1.1 |
 
-The Arcade font's original notice and restrictions are preserved in [UPSTREAM-LICENSE.md](../assets/fonts/UPSTREAM-LICENSE.md). It is not automatically covered by Ebitengine's code license. See [font source notes](../assets/fonts/README.md); [issue #6](https://github.com/Warsinger/golang-rpg/issues/6) tracks choosing a current engine resource and verifying its own license.
+Press Start 2P replaces the legacy Arcade font following the owner's selection in issue #6. Its copyright, reserved font name and complete SIL Open Font License 1.1 are preserved in [OFL.txt](../assets/fonts/OFL.txt). See [font source notes](../assets/fonts/README.md) for the exact source revision, checksum and distribution requirements. Native and browser builds embed the same font; Pages bundles include the license linked in the footer.
 
 When provenance is recovered or assets are replaced, record the exact source URL, creator, license text/version, attribution requirements and any changes made. New assets should have these recorded when introduced. An ECS migration or broader gameplay redesign is unrelated to asset licensing and is not part of this issue.

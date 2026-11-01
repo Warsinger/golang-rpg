@@ -53,25 +53,13 @@ const (
 	Right
 )
 
-var (
-	mplusFaceSource *text.GoTextFaceSource
-	mplusNormalFace *text.GoTextFace
-	// mplusBigFace    *text.GoTextFace
-)
+// gameFontFace keeps the original 8-pixel text size and existing line spacing.
+var gameFontFace *text.GoTextFace
 
 func init() {
-	s, err := text.NewGoTextFaceSource(assets.FontReader())
+	source, err := text.NewGoTextFaceSource(assets.FontReader())
 	if err != nil {
 		log.Fatal(err)
 	}
-	mplusFaceSource = s
-
-	mplusNormalFace = &text.GoTextFace{
-		Source: mplusFaceSource,
-		Size:   8,
-	}
-	// mplusBigFace = &text.GoTextFace{
-	// 	Source: mplusFaceSource,
-	// 	GetSize():   24,
-	// }
+	gameFontFace = &text.GoTextFace{Source: source, Size: 8}
 }

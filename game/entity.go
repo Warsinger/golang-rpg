@@ -117,8 +117,8 @@ func (e *EntityInfo) DrawInfo(screen *ebiten.Image, x, y float32) {
 
 	op := &text.DrawOptions{}
 	op.GeoM.Translate(float64(x), float64(y))
-	op.LineSpacing = mplusNormalFace.Size * 1.5
-	text.Draw(screen, infoText, mplusNormalFace, op)
+	op.LineSpacing = gameFontFace.Size * 1.5
+	text.Draw(screen, infoText, gameFontFace, op)
 }
 
 func (a *AttackInfo) GetAttackPower() int {

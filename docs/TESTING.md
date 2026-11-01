@@ -69,3 +69,21 @@ To check test isolation locally, run go test -shuffle=on -count=3 ./... (or reta
 Resource-injection regressions initialize/reset a real configured scene from in-memory filesystems in an empty working directory, and verify a failed resource reload preserves active state. Native startup/config/save tests remain in place.
 
 The browser milestone adds an unexercised native build/server command and platform adapters; current native statement coverage is 64.3%. Browser JavaScript has its own behavioral tests, and browser-only Go resource/control code is validated by the actual Chromium bundle checks rather than included in the Windows coverage percentage.
+
+## Font verification (issue #6)
+
+The owner selected Press Start 2P after comparing the legacy Arcade font,
+Press Start 2P, Terminus TTF and M+ 1p. The replacement retains 8 logical pixels,
+the existing anchors, 12-pixel entity line spacing and 16-pixel item line spacing.
+The font regression checks the embedded family, printable ASCII coverage and fresh
+reader behavior. Pages packaging checks the exact copyright/OFL notice and link.
+
+Chromium checks used the actual browser bundle at the normal launcher size and a
+1920 x 1440 playfield (one CSS pixel per logical pixel): player name/level,
+health, gold, long monster names and treasure/health-pack labels remain aligned
+and visible, including labels at the top-left edge. See [rendered playfield](font-preview.jpg).
+The Font license footer link displays the complete copyright and SIL OFL 1.1.
+Text still becomes small when the entire board is scaled down; this change does
+not redesign mobile labels. Arbitrary user-configured Unicode names are not
+promised by the ASCII coverage test. Interactive native-window rendering,
+Safari/Firefox and physical mobile devices were not checked for this change.
