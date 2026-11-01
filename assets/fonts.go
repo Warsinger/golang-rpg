@@ -6,10 +6,10 @@ import (
 	"io"
 )
 
-// See fonts/UPSTREAM-LICENSE.md for the original font notice.
+// See fonts/OFL.txt for the original font notice.
 //
-//go:embed fonts/arcade_n.ttf
-var arcadeFont []byte
+//go:embed fonts/pressstart2p.ttf
+var gameFont []byte
 
 // FontReader returns a fresh reader without exposing the embedded byte slice.
-func FontReader() io.Reader { return bytes.NewReader(arcadeFont) }
+func FontReader() io.Reader { return bytes.NewReader(gameFont) }

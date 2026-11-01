@@ -115,8 +115,8 @@ func drawInfo(screen *ebiten.Image, i Item, x, y float32) {
 
 	op := &text.DrawOptions{}
 	op.GeoM.Translate(float64(x), float64(y))
-	op.LineSpacing = mplusNormalFace.Size * 2
-	text.Draw(screen, infoText, mplusNormalFace, op)
+	op.LineSpacing = gameFontFace.Size * 2
+	text.Draw(screen, infoText, gameFontFace, op)
 }
 
 func (i *ItemInfo) GetAsset() assets.Asset {

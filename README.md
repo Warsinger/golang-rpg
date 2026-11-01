@@ -60,7 +60,7 @@ The owner-provisioned deployment target is [gorpg.pages.dev](https://gorpg.pages
 
 ## Assets
 
-The prototype uses character sprites, items and tiles from image packs. Their original sources and licenses are not recorded in this repository; “freely available” alone does not establish reuse rights. See the [asset inventory](docs/ASSETS.md) for the attribution gaps and the existing font notice. [#6](https://github.com/Warsinger/golang-rpg/issues/6) tracks replacement of the legacy font.
+The prototype uses character sprites, items and tiles from image packs. Their original sources and licenses are not recorded in this repository; “freely available” alone does not establish reuse rights. See the [asset inventory](docs/ASSETS.md) for the attribution gaps and the [Press Start 2P font notice](assets/fonts/README.md). The font uses SIL OFL 1.1; include its copyright/license with desktop distributions.
 
 ## Roadmap
 
