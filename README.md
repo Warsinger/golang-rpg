@@ -15,7 +15,7 @@ go run .
 
 Windows and macOS require no separate graphics development packages for a normal Go build. On Linux, install the [Ebitengine graphics dependencies](https://ebitengine.org/en/documents/install.html); running the app and its graphics-linked tests needs a display or Xvfb.
 
-The shipped board is 40 × 30 cells of 48 pixels, rendered at 1920 × 1440 logical resolution. The undecorated desktop window scales to the monitor, and the game updates at 15 ticks per second. It starts immediately.
+The shipped board is 40 × 30 cells of 48 pixels, rendered at 1920 × 1440 logical resolution. The undecorated desktop window scales to the monitor, and the game updates at 60 ticks per second. Each one-cell move takes 12 updates (200ms) in every direction, with walk frames advancing every four moving updates. Held attacks retain their 15-per-second cadence. It starts immediately.
 
 ## Controls
 

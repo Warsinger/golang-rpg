@@ -43,7 +43,7 @@ func main() {
 		ebiten.SetWindowDecorated(false)
 
 	}
-	ebiten.SetTPS(15)
+	ebiten.SetTPS(60)
 
 	if err := ebiten.RunGame(g); err != nil {
 		platform.ReportError(err.Error())

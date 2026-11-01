@@ -17,7 +17,7 @@ Paths in this table are under `config/`. Empty monster/item lists are permitted.
 
 ## Board and placement
 
-Grid width/height must be positive. Grid size must be 12..8192; the 12 minimum prevents the current movement interpolation's integer step becoming zero. Logical width and height must each be at most 8192 pixels. Bounds are checked by division before multiplication/allocation to avoid integer overflow. The supplied 40 × 30 × 48 board is unchanged.
+Grid width/height must be positive. Grid size must be 12..8192; the existing 12 minimum remains the supported configuration range. Interpolation uses a fixed twelve updates, including for cell sizes not divisible by twelve. Logical width and height must each be at most 8192 pixels. Bounds are checked by division before multiplication/allocation to avoid integer overflow. The supplied 40 × 30 × 48 board is unchanged.
 
 Objects have `objectinfo: {gridx, gridy, size}`. Coordinates are zero-based, size is a positive square footprint, the whole footprint must fit within the board, and no initial objects may overlap. Placement order is player, treasures, health packs, monsters. Errors identify the file and zero-based list index where applicable.
 

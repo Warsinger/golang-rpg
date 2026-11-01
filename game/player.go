@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 	"io/fs"
+	"math"
 
 	"golang-rpg/assets"
 	"golang-rpg/internal/collections"
@@ -23,8 +24,10 @@ type PlayerInfo struct {
 	Level      int
 	Character  string
 
-	walkAsset assets.Asset
-	walkFrame int
+	walkAsset    assets.Asset
+	walkFrame    int
+	walkTicks    int
+	movePosition *image.Point
 
 	deathAsset assets.Asset
 
@@ -48,6 +51,7 @@ type Player interface {
 	Move(direction Direction, b Board) bool
 	EnqueueMove(pt *image.Point)
 	DequeueMove() *image.Point
+	AdvanceMovement()
 	Idle()
 	LoadImages(am assets.AssetManager)
 	UseItem(i Item)
@@ -82,12 +86,10 @@ func LoadPlayer(configs fs.FS, b Board, am assets.AssetManager) (Player, error) 
 }
 
 func (p *PlayerInfo) Draw(screen *ebiten.Image, b Board) error {
-	pt := p.DequeueMove()
+	pt := p.movePosition
 	var x, y float32
-	incFrame := false
 	if pt != nil {
 		x, y = float32(pt.X), float32(pt.Y)
-		incFrame = true
 	} else {
 		var err error
 		x, y, err = b.GridToXY(p.GridX, p.GridY)
@@ -119,9 +121,6 @@ func (p *PlayerInfo) Draw(screen *ebiten.Image, b Board) error {
 	if p.Alive() {
 		switch p.animState {
 		case "walk":
-			if incFrame {
-				incrementFrame(&p.walkFrame, p.walkAsset)
-			}
 			frame = p.walkFrame
 		case "attack":
 			frame = p.attackFrame
@@ -194,7 +193,7 @@ func (p *PlayerInfo) DrawInfo(screen *ebiten.Image, x, y float32) {
 }
 
 func (p *PlayerInfo) Move(direction Direction, b Board) bool {
-	// don't move if we're already moving to let the queue drain
+	// Accept another grid step only after fixed updates finish this one.
 	if !p.moveQueue.IsEmpty() {
 		return false
 	}
@@ -209,56 +208,71 @@ func (p *PlayerInfo) Move(direction Direction, b Board) bool {
 		gx += 1
 	case Left:
 		gx -= 1
+	default:
+		return false
 	}
 
-	p.animState = "walk"
-
 	if b.CanOccupySpace(p, gx, gy) {
+		// Validate and queue the visual path before committing occupancy.
+		if err := p.queuePoints(p.GridX, p.GridY, gx, gy, b); err != nil {
+			return false
+		}
 		switch direction {
 		case Left:
 			p.facingLeft = true
 		case Right:
 			p.facingLeft = false
 		}
-		// queue up several coordinates between old and new to draw intermeiate frames
-		p.queuePoints(p.GridX, p.GridY, gx, gy, b)
+		p.animState = "walk"
 
 		b.RemoveObjectFromBoard(p)
 		p.GridX = gx
 		p.GridY = gy
 		b.AddObjectToBoard(p)
 
-		incrementFrame(&p.walkFrame, p.walkAsset)
 		return true
 	}
 
 	return false
 }
 
+// One cell takes 12 fixed updates (200ms at the default 60 TPS).
+const movementTicks = 12
+const walkFrameTicks = 4
+
 func (p *PlayerInfo) queuePoints(gx1, gy1, gx2, gy2 int, b Board) error {
-	const stepsPerFrame = 12
 	x1, y1, err := b.GridToXY(gx1, gy1)
 	if err != nil {
 		return err
 	}
-	x2, y2, err2 := b.GridToXY(gx2, gy2)
-	if err2 != nil {
-		return err2
+	x2, y2, err := b.GridToXY(gx2, gy2)
+	if err != nil {
+		return err
 	}
-	stepSize := b.GetGridSize() / stepsPerFrame
-	var pt image.Point
-	if gx1 != gx2 {
-		for i := int(x1); i < int(x2); i += stepSize {
-			pt = image.Pt(i, int(y1))
-			p.EnqueueMove(&pt)
-		}
-	} else if gy1 != gy2 {
-		for i := int(y1); i < int(y2); i += stepSize {
-			pt = image.Pt(int(x1), i)
-			p.EnqueueMove(&pt)
-		}
+	// Exclude the origin and include the exact destination. A fixed count avoids
+	// direction/size/divisibility changing the duration or creating an endpoint jump.
+	for tick := 1; tick <= movementTicks; tick++ {
+		fraction := float64(tick) / movementTicks
+		pt := image.Pt(int(math.Round(float64(x1)+(float64(x2)-float64(x1))*fraction)), int(math.Round(float64(y1)+(float64(y2)-float64(y1))*fraction)))
+		p.EnqueueMove(&pt)
 	}
 	return nil
+}
+
+// AdvanceMovement runs exactly once per game update; Draw only observes state.
+func (p *PlayerInfo) AdvanceMovement() {
+	p.movePosition = p.DequeueMove()
+	if p.movePosition == nil {
+		p.walkTicks = 0
+		return
+	}
+	if p.Alive() && p.animState == "walk" {
+		p.walkTicks++
+		if p.walkTicks == walkFrameTicks {
+			incrementFrame(&p.walkFrame, p.walkAsset)
+			p.walkTicks = 0
+		}
+	}
 }
 
 func (p *PlayerInfo) UseItem(i Item) {
