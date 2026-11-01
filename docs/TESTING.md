@@ -30,7 +30,7 @@ Tests exercise non-square board coordinates and multi-cell occupancy against rec
 
 GameInfo.Update samples real keyboard input and delegates rules to applyInput. Tests call that same per-tick rule path using gameInput; fullscreen/key sampling remains an adapter/device check. Each AttackInfo can supply a private randomIntN callback. Tests use explicit low/high rolls and verify the requested bound, avoiding global random seeds and flaky damage assertions. Normal play still uses math/rand/v2.IntN. Most rule fixtures need no rendered sprites, although the game package still imports Ebitengine and the startup suite loads actual assets.
 
-Movement tests deliberately characterize current quirks: right/down enqueue interpolation points and block new moves until drawing drains them; left/up do not enqueue them. XP 25 does not increase the shipped level-1 player, and a multi-level jump increases attack power once per LevelUp call. These are documented for future design decisions, not silently changed to meet a new test.
+Movement regressions now require equal duration and exact endpoints in all four directions (issue #15), replacing the old characterization of left/up skipping interpolation. XP 25 still does not increase the shipped level-1 player, and a multi-level jump increases attack power once per LevelUp call; those progression quirks remain unchanged.
 
 The pickup/occupancy regression was reproduced before its fix: an item retained after use could clear its old cell again after the player moved there. Used items now leave the active list; board removal clears only cells still owned by that object. Tests also cover a stale item at another occupant, distant items retained after nearby pickup, full multi-cell loot removal, and duplicate gold prevention.
 
@@ -62,7 +62,7 @@ For startup error handling, build the executable, launch it outside the reposito
 
 Scene test fixtures copy the repository-level config/assets directories into a temporary working directory; moving tests into game must not change the executable's repository-root resource paths.
 
-The automated startup scene smoke test decodes actual assets and creates Ebitengine images, but does not run the interactive render/input loop. Manual graphics, keyboard/fullscreen and real-device behavior have not been verified for this PR. Existing interpolation asymmetry, ignored Draw-return errors, multi-target combat ordering and progression quirks remain future work; the stale pickup occupancy bug is fixed and covered.
+The automated startup scene smoke test decodes actual assets and creates Ebitengine images, but does not run the interactive render/input loop. Manual graphics, keyboard/fullscreen and real-device behavior have not been verified for this PR. The interpolation asymmetry is fixed in issue #15; ignored Draw-return errors, multi-target combat ordering and progression quirks remain future work; the stale pickup occupancy bug is fixed and covered.
 
 To check test isolation locally, run go test -shuffle=on -count=3 ./... (or retain a reported shuffle seed to reproduce an ordering failure). This was run successfully in addition to the coverage suite. Native/Wasm compilation remains separate from interactive device checks. Browser checks for this change were performed in Chromium and are documented in BROWSER.md.
 
@@ -95,8 +95,7 @@ Facing regressions cover successful left/right changes, vertical/idle/attack/pic
 death retention, boundaries/collisions, ignored turns while interpolation drains,
 and reset using the shipped configuration. Transform checks cover both directions,
 cell corners/center, fractional world origins and sizes 1..3 so mirroring cannot
-shift the selected frame outside its original scaled footprint. Existing movement
-queue timing and left/up interpolation behavior remain unchanged.
+shift the selected frame outside its original scaled footprint. That facing change preserved the old queue timing; issue #15 subsequently replaces it with fixed-update interpolation.
 
 Chromium checks used the actual Wasm game at its 1920x1440 logical resolution and
 at launcher scale: keyboard and page direction controls flip the player in place,
@@ -105,3 +104,25 @@ including at the left board edge, and the HUD/background are not mirrored.
 show cropped captures of the actual playfield. State regressions cover retained
 attack/death facing; those animations were not separately inspected interactively.
 Native interactive rendering and other browsers/devices were not checked.
+
+## Movement timing (issue #15)
+
+The new directional regression failed against the old implementation: left/up
+queued zero positions, right/down omitted the endpoint, and a 50px cell queued
+13 positions. It now checks all four directions with player sizes 1..3 and cell
+sizes 12, 48 and 50, exact endpoints, monotonic bounded pixel steps and twelve-step
+duration. Held-input tests move two cells in exactly 24 updates with zero, one or
+five draws per update, asserting position, walk cadence and complete footprint
+occupancy. Other checks cover reset discarding pending interpolation, blocked
+moves/facing, input priority and 60 updates yielding only 15 attacks/counterattacks.
+The existing combat regression now waits the intended cooldown before its second
+attack. Sprite-facing and startup/resource tests remain in the suite.
+
+Go tests (including three shuffled runs), module verification/tidy, vet, Windows
+build, Wasm build and all eleven browser tests passed locally. Chromium checks
+used held keyboard and on-screen buttons in all directions, reversal, blocked
+movement, retained facing and reset. Native interactive rendering, real mobile
+devices and other browsers were not checked for this fix.
+Local cross-package coverage after this fix is 69.8%; coverage remains informational.
+[Chromium build after reset](movement-check.jpg) records the tested playfield;
+movement timing is asserted by update-count regressions rather than a still image.

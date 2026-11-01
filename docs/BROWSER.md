@@ -23,3 +23,9 @@ The loader accepts raw Wasm locally. Pages packages gzip Wasm and the loader rec
 Run `node --test scripts/*.test.mjs` and the Go checks in TESTING.md. Tests cover raw/gzip Wasm, failed downloads/decompression/runtime, message origin/source/session checks, pickup latching, input release, readiness/error/restart behavior, fullscreen denial/exit validation, actual HTML/script references, gzip integrity, reproducible hashed assets and the Pages per-file limit.
 
 Verified in the in-app Chromium browser using the compressed Pages bundle: immediate startup/focus, keyboard and on-screen movement, monster combat/death/loot, pickup, fresh scene restart, fullscreen, and the 320-pixel layout. A real touchscreen, Safari/iOS, Firefox and assistive technologies still need device checks. Game rendering and combat remain the same shared Go implementation. No audio is added; the current RPG has no audio playback path.
+
+Issue #15 shares the same 60-TPS movement path with native builds: twelve fixed
+updates per cell in every direction, with 15-fps walk animation and 15-per-second
+held attacks. Browser rendering frequency no longer changes movement duration.
+Keyboard and held page-direction controls, reversal, collision and reset were
+checked in Chromium; physical touch devices and native windows remain unverified.

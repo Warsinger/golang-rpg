@@ -97,6 +97,11 @@ func TestAttackCounterattackDeathAndLoot(t *testing.T) {
 	if m.CurrentHealth != 4 || p.CurrentHealth != 98 || p.Experience != 0 || len(g.Items) != 0 {
 		t.Fatal("surviving target did not counterattack with expected damage")
 	}
+	for range 3 {
+		if err := g.applyInput(gameInput{}); err != nil {
+			t.Fatal(err)
+		}
+	}
 	if err := g.applyInput(gameInput{attack: true}); err != nil {
 		t.Fatal(err)
 	}
@@ -248,17 +253,17 @@ func TestResetQuitAndErrorPaths(t *testing.T) {
 	})
 }
 
-func TestMovementAnimationAndQueueCharacterization(t *testing.T) {
+func TestMovementAnimationAndQueue(t *testing.T) {
 	for _, test := range []struct {
 		direction Direction
 		want      image.Point
 		count     int
 		last      image.Point
 	}{
-		{Right, image.Pt(2, 1), 12, image.Pt(92, 48)},
-		{Down, image.Pt(1, 2), 12, image.Pt(48, 92)},
-		{Left, image.Pt(0, 1), 0, image.Point{}},
-		{Up, image.Pt(1, 0), 0, image.Point{}},
+		{Right, image.Pt(2, 1), 12, image.Pt(96, 48)},
+		{Down, image.Pt(1, 2), 12, image.Pt(48, 96)},
+		{Left, image.Pt(0, 1), 12, image.Pt(0, 48)},
+		{Up, image.Pt(1, 0), 12, image.Pt(48, 0)},
 	} {
 		t.Run(fmt.Sprint(test.direction), func(t *testing.T) {
 			g := ruleScene()
@@ -266,7 +271,7 @@ func TestMovementAnimationAndQueueCharacterization(t *testing.T) {
 			if !p.Move(test.direction, g.Board) {
 				t.Fatal("valid move blocked")
 			}
-			if p.GridX != test.want.X || p.GridY != test.want.Y || p.walkFrame != 1 || p.animState != "walk" {
+			if p.GridX != test.want.X || p.GridY != test.want.Y || p.walkFrame != 0 || p.animState != "walk" {
 				t.Fatal("movement/animation state incorrect")
 			}
 			if !g.Board.CanOccupySpace(&ObjectInfo{Size: 1}, 1, 1) || g.Board.CanOccupySpace(&ObjectInfo{Size: 1}, p.GridX, p.GridY) {
@@ -279,7 +284,7 @@ func TestMovementAnimationAndQueueCharacterization(t *testing.T) {
 			if len(points) != test.count {
 				t.Fatalf("got %d interpolation points, want %d", len(points), test.count)
 			}
-			if test.count > 0 && (points[0] != image.Pt(48, 48) || points[len(points)-1] != test.last) {
+			if test.count > 0 && (points[0] == image.Pt(48, 48) || points[len(points)-1] != test.last) {
 				t.Fatalf("interpolation endpoints %v", points)
 			}
 			if p.DequeueMove() != nil {

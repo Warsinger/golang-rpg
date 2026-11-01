@@ -21,6 +21,7 @@ type GameInfo struct {
 	Items           []Item
 	AssetManager    assets.AssetManager
 	configs, images fs.FS
+	attackCooldown  int
 }
 
 // New loads the configured scene from the repository working directory.
@@ -89,6 +90,9 @@ func (g *GameInfo) applyInput(input gameInput) error {
 		}
 		return ebiten.Termination
 	}
+	if g.attackCooldown > 0 {
+		g.attackCooldown--
+	}
 	if g.Player.Alive() {
 		// Handle input
 		if input.right {
@@ -99,7 +103,8 @@ func (g *GameInfo) applyInput(input gameInput) error {
 			g.Player.Move(Down, g.Board)
 		} else if input.up {
 			g.Player.Move(Up, g.Board)
-		} else if input.attack {
+		} else if input.attack && g.attackCooldown == 0 {
+			g.attackCooldown = 4 // Preserve the former 15 attacks/second at 60 updates/second.
 			// TODO optimize to look for monsters in reach rather than all monsters
 			for _, m := range g.Monsters {
 				if m.Alive() && inRange(g.Player, m, 1) {
@@ -135,6 +140,7 @@ func (g *GameInfo) applyInput(input gameInput) error {
 			g.Items = remaining
 		}
 	}
+	g.Player.AdvanceMovement()
 	return nil
 }
 

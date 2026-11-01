@@ -56,6 +56,10 @@ func TestBlockedAndQueuedMovementPreserveFacing(t *testing.T) {
 	if !p.Move(Left, g.Board) {
 		t.Fatal("left move was blocked")
 	}
+	if p.Move(Right, g.Board) || !p.facingLeft {
+		t.Fatal("queued left move turned before completion")
+	}
+	drainMoves(p)
 	if p.Move(Left, g.Board) || !p.facingLeft || p.GridX != 0 {
 		t.Fatal("boundary attempt changed facing/position")
 	}
